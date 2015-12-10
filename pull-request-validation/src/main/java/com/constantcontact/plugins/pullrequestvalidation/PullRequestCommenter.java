@@ -101,7 +101,7 @@ public class PullRequestCommenter extends Publisher implements SimpleBuildStep {
     sb.append(Jenkins.getInstance().getRootUrl());
     sb.append("/favicon.ico' /></td>");
     sb.append("<td>");
-    sb.append("PR Validator Started to Run Tests against your PR");
+    sb.append("PR Validator Finished Running tests against your PR");
     sb.append("<br />");
     sb.append("<a target='_blank' href='" + run.getAbsoluteUrl()
         + "' title='Click here to view the Jenkins Job for the Fork that the pull request came from'>");
