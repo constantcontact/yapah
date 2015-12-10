@@ -62,7 +62,7 @@ public class PullRequestTrigger extends Trigger<AbstractProject<?, ?>> {
     StringBuilder sb = new StringBuilder();
     sb.append("Jenkins Started to Run Tests");
     sb.append("<br />");
-    sb.append("<a target='_blank' href='" + project.getAbsoluteUrl()+ "'>");
+    sb.append("<a target='_blank' href='" + project.getAbsoluteUrl() + "'>");
     sb.append(project.getName());
     sb.append("</a>");
     return sb.toString();
@@ -129,46 +129,6 @@ public class PullRequestTrigger extends Trigger<AbstractProject<?, ?>> {
       LOGGER.info(ex.getMessage() + "\n" + ex.getStackTrace());
     }
 
-    doRun();
-
-  }
-
-  private void createComment(final IssueService issueService, final Repository repository,
-      final PullRequest pullRequest, final String poolingComment) throws Exception {
-    issueService.createComment(repository, pullRequest.getNumber(),
-        poolingComment);
-  }
-
-  private void createCommitStatus(final CommitService commitService, final Repository repository) throws IOException {
-    CommitStatus commitStatus = new CommitStatus();
-    commitStatus.setDescription(getStartDescription(job));
-    commitStatus.setState(CommitStatus.STATE_PENDING);
-    commitService.createStatus(repository, sha, commitStatus);
-  }
-
-  private void createCommentAndCommitStatus(final IssueService issueService, final CommitService commitService,
-      final Repository repository, final PullRequest pullRequest) throws Exception {
-    createComment(issueService, repository, pullRequest, getPoolingComment());
-    createCommitStatus(commitService, repository);
-  }
-  
-  private String getPoolingComment(){
-    StringBuilder sb = new StringBuilder();
-    sb.append("<table cellspacing='0' cellpadding='0' ><tr><td align='left'><img src='");
-    sb.append(Jenkins.getInstance().getRootUrl());
-    sb.append("/favicon.ico' /></td>");
-    sb.append("<td>");
-    sb.append("QE Jenkins Started to Run Tests against your fork");
-    sb.append("<br />");
-    sb.append("<a target='_blank' href='" + job.getAbsoluteUrl() + "' title='Click here to view the Jenkins Job for the Fork that the pull request came from'>");
-    sb.append("Click here to see Tests Running for " + job.getName());
-    sb.append("</a>");
-    sb.append("</td>");
-    sb.append("</tr></table>");
-    return sb.toString();
-  }
-
-  public void doRun() {
     try {
       if (isSupposedToRun) {
         PullRequestTriggerConfig expandedConfig = new PullRequestTriggerConfig(systemUser, systemUserPassword,
@@ -190,6 +150,42 @@ public class PullRequestTrigger extends Trigger<AbstractProject<?, ?>> {
     }
     return;
 
+  }
+
+  private void createComment(final IssueService issueService, final Repository repository,
+      final PullRequest pullRequest, final String poolingComment) throws Exception {
+    issueService.createComment(repository, pullRequest.getNumber(),
+        poolingComment);
+  }
+
+  private void createCommitStatus(final CommitService commitService, final Repository repository) throws IOException {
+    CommitStatus commitStatus = new CommitStatus();
+    commitStatus.setDescription(getStartDescription(job));
+    commitStatus.setState(CommitStatus.STATE_PENDING);
+    commitService.createStatus(repository, sha, commitStatus);
+  }
+
+  private void createCommentAndCommitStatus(final IssueService issueService, final CommitService commitService,
+      final Repository repository, final PullRequest pullRequest) throws Exception {
+    createComment(issueService, repository, pullRequest, getPoolingComment());
+    createCommitStatus(commitService, repository);
+  }
+
+  private String getPoolingComment() {
+    StringBuilder sb = new StringBuilder();
+    sb.append("<table cellspacing='0' cellpadding='0' ><tr><td align='left'><img src='");
+    sb.append(Jenkins.getInstance().getRootUrl());
+    sb.append("/favicon.ico' /></td>");
+    sb.append("<td>");
+    sb.append("Jenkins Started to Run Tests against your fork");
+    sb.append("<br />");
+    sb.append("<a target='_blank' href='" + job.getAbsoluteUrl()
+        + "' title='Click here to view the Jenkins Job for the Fork that the pull request came from'>");
+    sb.append("Click here to see Tests Running for " + job.getName());
+    sb.append("</a>");
+    sb.append("</td>");
+    sb.append("</tr></table>");
+    return sb.toString();
   }
 
   @Extension
