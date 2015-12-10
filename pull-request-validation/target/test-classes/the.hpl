@@ -3,21 +3,21 @@ Group-Id: com.constantcontact.plugins
 Short-Name: pull-request-validation
 Long-Name: Github API Pull Request Validation
 Url: https://wiki.jenkins-ci.org/display/JENKINS/TODO+Plugin
-Plugin-Version: 1.0-SNAPSHOT (private-7a4b79e7-rdavis)
+Plugin-Version: 1.0-SNAPSHOT (private-7596d2f3-rdavis)
 Hudson-Version: 1.580.1
 Jenkins-Version: 1.580.1
 Plugin-Developers: 
 Libraries: /Users/rdavis/repos/pull-request-validation-plugin/pull-req
- uest-validation/target/classes,/Users/rdavis/.m2/repository/org/eclip
- se/mylyn/github/org.eclipse.egit.github.core/2.1.5/org.eclipse.egit.g
- ithub.core-2.1.5.jar,/Users/rdavis/.m2/repository/com/google/code/gso
- n/gson/2.2.2/gson-2.2.2.jar,/Users/rdavis/.m2/repository/commons-code
- c/commons-codec/1.9/commons-codec-1.9.jar,/Users/rdavis/.m2/repositor
- y/commons-logging/commons-logging/1.2/commons-logging-1.2.jar,/Users/
- rdavis/.m2/repository/org/apache/httpcomponents/httpcore/4.4.3/httpco
- re-4.4.3.jar,/Users/rdavis/.m2/repository/org/apache/httpcomponents/h
- ttpclient/4.5.1/httpclient-4.5.1.jar,/Users/rdavis/.m2/repository/org
- /apache/httpcomponents/fluent-hc/4.5.1/fluent-hc-4.5.1.jar
+ uest-validation/target/classes,/Users/rdavis/.m2/repository/org/apach
+ e/httpcomponents/httpclient/4.5.1/httpclient-4.5.1.jar,/Users/rdavis/
+ .m2/repository/org/apache/httpcomponents/httpcore/4.4.3/httpcore-4.4.
+ 3.jar,/Users/rdavis/.m2/repository/com/google/code/gson/gson/2.2.2/gs
+ on-2.2.2.jar,/Users/rdavis/.m2/repository/org/eclipse/mylyn/github/or
+ g.eclipse.egit.github.core/2.1.5/org.eclipse.egit.github.core-2.1.5.j
+ ar,/Users/rdavis/.m2/repository/commons-codec/commons-codec/1.9/commo
+ ns-codec-1.9.jar,/Users/rdavis/.m2/repository/org/apache/httpcomponen
+ ts/fluent-hc/4.5.1/fluent-hc-4.5.1.jar,/Users/rdavis/.m2/repository/c
+ ommons-logging/commons-logging/1.2/commons-logging-1.2.jar
 Resource-Path: /Users/rdavis/repos/pull-request-validation-plugin/pull
  -request-validation/src/main/webapp
 

@@ -23,6 +23,7 @@ import org.eclipse.egit.github.core.Comment;
 import org.eclipse.egit.github.core.CommitStatus;
 import org.eclipse.egit.github.core.PullRequest;
 import org.eclipse.egit.github.core.Repository;
+import org.eclipse.egit.github.core.RepositoryCommit;
 import org.eclipse.egit.github.core.client.GitHubClient;
 import org.eclipse.egit.github.core.service.CommitService;
 import org.eclipse.egit.github.core.service.IssueService;
@@ -62,7 +63,7 @@ public class PullRequestTrigger extends Trigger<AbstractProject<?, ?>> {
     StringBuilder sb = new StringBuilder();
     sb.append("Jenkins Started to Run Tests");
     sb.append("<br />");
-    sb.append("<a target='_blank' href='" + project.getAbsoluteUrl()+ "'>");
+    sb.append("<a target='_blank' href='" + project.getAbsoluteUrl() + "'>");
     sb.append(project.getName());
     sb.append("</a>");
     return sb.toString();
@@ -108,6 +109,8 @@ public class PullRequestTrigger extends Trigger<AbstractProject<?, ?>> {
 
           isSupposedToRun = true;
           createCommentAndCommitStatus(issueService, commitService, repository, pullRequest);
+          doRun(pullRequest);
+
         } else {
           Long mostRecentComment = Collections.max(commentIds);
 
@@ -115,9 +118,18 @@ public class PullRequestTrigger extends Trigger<AbstractProject<?, ?>> {
             if (comment.getId() == mostRecentComment) {
               if (!comment.getBody().contains("PR Validator")) {
                 LOGGER.info("Should fire off a trigger, no bad comments found");
-
                 isSupposedToRun = true;
                 createCommentAndCommitStatus(issueService, commitService, repository, pullRequest);
+                
+                List<RepositoryCommit> commits = commitService.getCommits(repository, sha, null);
+                
+                
+                for(RepositoryCommit commit : commits ){
+                  LOGGER.info("commit.getAuthor().getCreatedAt(): " + commit.getAuthor().getCreatedAt());
+                  if(commit.getAuthor().getCreatedAt().after(comment.getCreatedAt())){
+                    doRun(pullRequest);
+                  }
+                }          
               }
             }
           }
@@ -126,11 +138,36 @@ public class PullRequestTrigger extends Trigger<AbstractProject<?, ?>> {
       }
     } catch (Exception ex) {
       LOGGER.info("Exception occurred stopping the trigger");
-      LOGGER.info(ex.getMessage() + "\n" + ex.getStackTrace());
+      LOGGER.info(ex.getMessage() + "\n" + ex.getStackTrace().toString());
     }
 
-    doRun();
+    return;
 
+  }
+
+  private void doRun(final PullRequest pullRequest) {
+    try {
+      if (isSupposedToRun) {
+        PullRequestTriggerConfig expandedConfig = new PullRequestTriggerConfig(systemUser,
+            systemUserPassword,
+            repositoryName, repositoryOwner, gitHubRepository, sha, pullRequestUrl);
+        List<ParameterValue> stringParams = new ArrayList<ParameterValue>();
+        stringParams.add(new StringParameterValue("systemUser", systemUser));
+        stringParams.add(new PasswordParameterValue("systemUserPassword", systemUserPassword));
+        stringParams.add(new StringParameterValue("repositoryName", repositoryName));
+        stringParams.add(new StringParameterValue("repositoryOwner", repositoryOwner));
+        stringParams.add(new StringParameterValue("gitHubRepository", gitHubRepository));
+        stringParams.add(new StringParameterValue("sha", sha));
+        stringParams.add(new StringParameterValue("pullRequestUrl", pullRequestUrl));
+        stringParams.add(new StringParameterValue("pullRequestNumber", String.valueOf(pullRequest
+            .getNumber())));
+        ParametersAction params = new ParametersAction(stringParams);
+
+        job.scheduleBuild2(0, new PullRequestTriggerCause(expandedConfig), params);
+      }
+    } finally {
+      isSupposedToRun = false;
+    }
   }
 
   private void createComment(final IssueService issueService, final Repository repository,
@@ -151,45 +188,22 @@ public class PullRequestTrigger extends Trigger<AbstractProject<?, ?>> {
     createComment(issueService, repository, pullRequest, getPoolingComment());
     createCommitStatus(commitService, repository);
   }
-  
-  private String getPoolingComment(){
+
+  private String getPoolingComment() {
     StringBuilder sb = new StringBuilder();
     sb.append("<table cellspacing='0' cellpadding='0' ><tr><td align='left'><img src='");
     sb.append(Jenkins.getInstance().getRootUrl());
     sb.append("/favicon.ico' /></td>");
     sb.append("<td>");
-    sb.append("QE Jenkins Started to Run Tests against your fork");
+    sb.append("PR Validator Started to Run Tests against your PR");
     sb.append("<br />");
-    sb.append("<a target='_blank' href='" + job.getAbsoluteUrl() + "' title='Click here to view the Jenkins Job for the Fork that the pull request came from'>");
+    sb.append("<a target='_blank' href='" + job.getAbsoluteUrl()
+        + "' title='Click here to view the Jenkins Job for the Fork that the pull request came from'>");
     sb.append("Click here to see Tests Running for " + job.getName());
     sb.append("</a>");
     sb.append("</td>");
     sb.append("</tr></table>");
     return sb.toString();
-  }
-
-  public void doRun() {
-    try {
-      if (isSupposedToRun) {
-        PullRequestTriggerConfig expandedConfig = new PullRequestTriggerConfig(systemUser, systemUserPassword,
-            repositoryName, repositoryOwner, gitHubRepository, sha, pullRequestUrl);
-        List<ParameterValue> stringParams = new ArrayList<ParameterValue>();
-        stringParams.add(new StringParameterValue("systemUser", systemUser));
-        stringParams.add(new PasswordParameterValue("systemUserPassword", systemUserPassword));
-        stringParams.add(new StringParameterValue("repositoryName", repositoryName));
-        stringParams.add(new StringParameterValue("repositoryOwner", repositoryOwner));
-        stringParams.add(new StringParameterValue("gitHubRepository", gitHubRepository));
-        stringParams.add(new StringParameterValue("sha", sha));
-        stringParams.add(new StringParameterValue("pullRequestUrl", pullRequestUrl));
-        ParametersAction params = new ParametersAction(stringParams);
-
-        job.scheduleBuild2(0, new PullRequestTriggerCause(expandedConfig), params);
-      }
-    } finally {
-      isSupposedToRun = false;
-    }
-    return;
-
   }
 
   @Extension
