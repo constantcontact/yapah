@@ -11,10 +11,13 @@ import hudson.model.StringParameterValue;
 import hudson.triggers.Trigger;
 import hudson.triggers.TriggerDescriptor;
 
+import java.io.IOException;
 import java.util.ArrayList;
 import java.util.Collections;
 import java.util.List;
 import java.util.logging.Logger;
+
+import jenkins.model.Jenkins;
 
 import org.eclipse.egit.github.core.Comment;
 import org.eclipse.egit.github.core.CommitStatus;
@@ -54,25 +57,20 @@ public class PullRequestTrigger extends Trigger<AbstractProject<?, ?>> {
     this.gitHubRepository = config.getGitHubRepository();
 
   }
-  
-  private String getStartDescription(final AbstractProject<?, ?> project){
+
+  private String getStartDescription(final AbstractProject<?, ?> project) {
     StringBuilder sb = new StringBuilder();
-    sb.append("<td>");
-    sb.append("QE Jenkins Started to Run Tests against your fork");
+    sb.append("Jenkins Started to Run Tests");
     sb.append("<br />");
-    sb.append("<a target='_blank' href='" + project.getAbsoluteUrl() + "' title='Click here to view the Jenkins Job for the Fork that the pull request came from'>");
-    sb.append("Click here to see Tests Running for " + project.getName());
+    sb.append("<a target='_blank' href='" + project.getAbsoluteUrl()+ "'>");
+    sb.append(project.getName());
     sb.append("</a>");
-    sb.append("</td>");
     return sb.toString();
   }
 
- 
-
-
   @Override
   public void run() {
-    
+
     try {
 
       GitHubClient githubClient = new GitHubClient("github.roving.com");
@@ -105,39 +103,21 @@ public class PullRequestTrigger extends Trigger<AbstractProject<?, ?>> {
           commentIds.add(comment.getId());
         }
 
-        final String poolingComment = "Pull Request Poller Launched for pull request\n"
-            + "\n Build kicking off in Jenkins <a href='" + job.getAbsoluteUrl() + "'>"
-            + job.getFullDisplayName()
-            + "</a>\n" + job.getBuildStatusUrl();
-
         if (commentIds.size() == 0) {
           LOGGER.info("Should fire off a trigger, no comments found");
 
           isSupposedToRun = true;
-          issueService.createComment(repository, pullRequest.getNumber(), poolingComment);
-          CommitStatus commitStatus = new CommitStatus();
-          commitStatus.setDescription(getStartDescription(job));
-          commitStatus.setState(CommitStatus.STATE_PENDING);
-          commitService.createStatus(repository, sha, commitStatus);
+          createCommentAndCommitStatus(issueService, commitService, repository, pullRequest);
         } else {
           Long mostRecentComment = Collections.max(commentIds);
 
           for (Comment comment : comments) {
             if (comment.getId() == mostRecentComment) {
-              if (comment.getBody().contains("NOT Good To Merge")
-                  || comment.getBody().contains("You are Good To Merge")
-                  || comment.getBody().contains("Pull Request Poller Launched for pull request")) {
-                
-              } else {
+              if (!comment.getBody().contains("PR Validator")) {
                 LOGGER.info("Should fire off a trigger, no bad comments found");
 
                 isSupposedToRun = true;
-                issueService.createComment(repository, pullRequest.getNumber(),
-                    poolingComment);
-                CommitStatus commitStatus = new CommitStatus();
-                commitStatus.setDescription(getStartDescription(job));
-                commitStatus.setState(CommitStatus.STATE_PENDING);
-                commitService.createStatus(repository, sha, commitStatus);
+                createCommentAndCommitStatus(issueService, commitService, repository, pullRequest);
               }
             }
           }
@@ -149,7 +129,46 @@ public class PullRequestTrigger extends Trigger<AbstractProject<?, ?>> {
       LOGGER.info(ex.getMessage() + "\n" + ex.getStackTrace());
     }
 
-    
+    doRun();
+
+  }
+
+  private void createComment(final IssueService issueService, final Repository repository,
+      final PullRequest pullRequest, final String poolingComment) throws Exception {
+    issueService.createComment(repository, pullRequest.getNumber(),
+        poolingComment);
+  }
+
+  private void createCommitStatus(final CommitService commitService, final Repository repository) throws IOException {
+    CommitStatus commitStatus = new CommitStatus();
+    commitStatus.setDescription(getStartDescription(job));
+    commitStatus.setState(CommitStatus.STATE_PENDING);
+    commitService.createStatus(repository, sha, commitStatus);
+  }
+
+  private void createCommentAndCommitStatus(final IssueService issueService, final CommitService commitService,
+      final Repository repository, final PullRequest pullRequest) throws Exception {
+    createComment(issueService, repository, pullRequest, getPoolingComment());
+    createCommitStatus(commitService, repository);
+  }
+  
+  private String getPoolingComment(){
+    StringBuilder sb = new StringBuilder();
+    sb.append("<table cellspacing='0' cellpadding='0' ><tr><td align='left'><img src='");
+    sb.append(Jenkins.getInstance().getRootUrl());
+    sb.append("/favicon.ico' /></td>");
+    sb.append("<td>");
+    sb.append("QE Jenkins Started to Run Tests against your fork");
+    sb.append("<br />");
+    sb.append("<a target='_blank' href='" + job.getAbsoluteUrl() + "' title='Click here to view the Jenkins Job for the Fork that the pull request came from'>");
+    sb.append("Click here to see Tests Running for " + job.getName());
+    sb.append("</a>");
+    sb.append("</td>");
+    sb.append("</tr></table>");
+    return sb.toString();
+  }
+
+  public void doRun() {
     try {
       if (isSupposedToRun) {
         PullRequestTriggerConfig expandedConfig = new PullRequestTriggerConfig(systemUser, systemUserPassword,
@@ -170,6 +189,7 @@ public class PullRequestTrigger extends Trigger<AbstractProject<?, ?>> {
       isSupposedToRun = false;
     }
     return;
+
   }
 
   @Extension
@@ -187,10 +207,9 @@ public class PullRequestTrigger extends Trigger<AbstractProject<?, ?>> {
      * {@inheritDoc}
      */
     @Override
-    public String getDisplayName() {      
+    public String getDisplayName() {
       return "Github Pull Request Poller";
     }
-    
 
   }
 
