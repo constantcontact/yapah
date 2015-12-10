@@ -108,6 +108,27 @@ public class PullRequestTrigger extends Trigger<AbstractProject<?, ?>> {
 
           isSupposedToRun = true;
           createCommentAndCommitStatus(issueService, commitService, repository, pullRequest);
+
+          try {
+            if (isSupposedToRun) {
+              PullRequestTriggerConfig expandedConfig = new PullRequestTriggerConfig(systemUser, systemUserPassword,
+                  repositoryName, repositoryOwner, gitHubRepository, sha, pullRequestUrl);
+              List<ParameterValue> stringParams = new ArrayList<ParameterValue>();
+              stringParams.add(new StringParameterValue("systemUser", systemUser));
+              stringParams.add(new PasswordParameterValue("systemUserPassword", systemUserPassword));
+              stringParams.add(new StringParameterValue("repositoryName", repositoryName));
+              stringParams.add(new StringParameterValue("repositoryOwner", repositoryOwner));
+              stringParams.add(new StringParameterValue("gitHubRepository", gitHubRepository));
+              stringParams.add(new StringParameterValue("sha", sha));
+              stringParams.add(new StringParameterValue("pullRequestUrl", pullRequestUrl));
+              stringParams.add(new StringParameterValue("pullRequestNumber", String.valueOf(pullRequest.getNumber())));
+              ParametersAction params = new ParametersAction(stringParams);
+
+              job.scheduleBuild2(0, new PullRequestTriggerCause(expandedConfig), params);
+            }
+          } finally {
+            isSupposedToRun = false;
+          }
         } else {
           Long mostRecentComment = Collections.max(commentIds);
 
@@ -118,6 +139,29 @@ public class PullRequestTrigger extends Trigger<AbstractProject<?, ?>> {
 
                 isSupposedToRun = true;
                 createCommentAndCommitStatus(issueService, commitService, repository, pullRequest);
+
+                try {
+                  if (isSupposedToRun) {
+                    PullRequestTriggerConfig expandedConfig = new PullRequestTriggerConfig(systemUser,
+                        systemUserPassword,
+                        repositoryName, repositoryOwner, gitHubRepository, sha, pullRequestUrl);
+                    List<ParameterValue> stringParams = new ArrayList<ParameterValue>();
+                    stringParams.add(new StringParameterValue("systemUser", systemUser));
+                    stringParams.add(new PasswordParameterValue("systemUserPassword", systemUserPassword));
+                    stringParams.add(new StringParameterValue("repositoryName", repositoryName));
+                    stringParams.add(new StringParameterValue("repositoryOwner", repositoryOwner));
+                    stringParams.add(new StringParameterValue("gitHubRepository", gitHubRepository));
+                    stringParams.add(new StringParameterValue("sha", sha));
+                    stringParams.add(new StringParameterValue("pullRequestUrl", pullRequestUrl));
+                    stringParams.add(new StringParameterValue("pullRequestNumber", String.valueOf(pullRequest
+                        .getNumber())));
+                    ParametersAction params = new ParametersAction(stringParams);
+
+                    job.scheduleBuild2(0, new PullRequestTriggerCause(expandedConfig), params);
+                  }
+                } finally {
+                  isSupposedToRun = false;
+                }
               }
             }
           }
@@ -126,28 +170,9 @@ public class PullRequestTrigger extends Trigger<AbstractProject<?, ?>> {
       }
     } catch (Exception ex) {
       LOGGER.info("Exception occurred stopping the trigger");
-      LOGGER.info(ex.getMessage() + "\n" + ex.getStackTrace());
+      LOGGER.info(ex.getMessage() + "\n" + ex.getStackTrace().toString());
     }
 
-    try {
-      if (isSupposedToRun) {
-        PullRequestTriggerConfig expandedConfig = new PullRequestTriggerConfig(systemUser, systemUserPassword,
-            repositoryName, repositoryOwner, gitHubRepository, sha, pullRequestUrl);
-        List<ParameterValue> stringParams = new ArrayList<ParameterValue>();
-        stringParams.add(new StringParameterValue("systemUser", systemUser));
-        stringParams.add(new PasswordParameterValue("systemUserPassword", systemUserPassword));
-        stringParams.add(new StringParameterValue("repositoryName", repositoryName));
-        stringParams.add(new StringParameterValue("repositoryOwner", repositoryOwner));
-        stringParams.add(new StringParameterValue("gitHubRepository", gitHubRepository));
-        stringParams.add(new StringParameterValue("sha", sha));
-        stringParams.add(new StringParameterValue("pullRequestUrl", pullRequestUrl));
-        ParametersAction params = new ParametersAction(stringParams);
-
-        job.scheduleBuild2(0, new PullRequestTriggerCause(expandedConfig), params);
-      }
-    } finally {
-      isSupposedToRun = false;
-    }
     return;
 
   }
@@ -177,7 +202,7 @@ public class PullRequestTrigger extends Trigger<AbstractProject<?, ?>> {
     sb.append(Jenkins.getInstance().getRootUrl());
     sb.append("/favicon.ico' /></td>");
     sb.append("<td>");
-    sb.append("Jenkins Started to Run Tests against your fork");
+    sb.append("PR Validator Started to Run Tests against your PR");
     sb.append("<br />");
     sb.append("<a target='_blank' href='" + job.getAbsoluteUrl()
         + "' title='Click here to view the Jenkins Job for the Fork that the pull request came from'>");

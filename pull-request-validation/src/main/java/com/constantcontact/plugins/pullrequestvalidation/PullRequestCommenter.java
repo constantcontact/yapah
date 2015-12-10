@@ -55,6 +55,7 @@ public class PullRequestCommenter extends Publisher implements SimpleBuildStep {
     final String systemUserPassword = run.getEnvironment(listener).get("systemUserPassword");
     final String repositoryName = run.getEnvironment(listener).get("repositoryName");
     final String repositoryOwner = run.getEnvironment(listener).get("repositoryOwner");
+    final String pullRequestNumber = run.getEnvironment(listener).get("pullRequestNumber");
 
     GitHubClient githubClient = new GitHubClient("github.roving.com");
     githubClient.setCredentials(systemUser, systemUserPassword);
@@ -63,10 +64,11 @@ public class PullRequestCommenter extends Publisher implements SimpleBuildStep {
     Repository repository = repositoryService.getRepository(repositoryOwner, repositoryName);
 
     CommitService commitService = new CommitService(githubClient);
-
+    IssueService issueService = new IssueService(githubClient);
     StringBuilder sb = new StringBuilder();
 
     CommitStatus commitStatus = new CommitStatus();
+    commitStatus.setState(CommitStatus.STATE_SUCCESS);
 
     if (run.getResult() == Result.SUCCESS) {
       commitStatus.setState(CommitStatus.STATE_SUCCESS);
@@ -86,9 +88,30 @@ public class PullRequestCommenter extends Publisher implements SimpleBuildStep {
     }
        
     listener.getLogger().println("Description Length: " +  sb.toString().length());
-    commitStatus.setDescription(sb.toString());
+    commitStatus.setDescription(sb.toString());    
     commitService.createStatus(repository, sha, commitStatus);
+    
+    issueService.createComment(repository, pullRequestNumber,
+        getPoolingComment(run));
   }
+  
+  private String getPoolingComment(Run<?, ?> run) {
+    StringBuilder sb = new StringBuilder();
+    sb.append("<table cellspacing='0' cellpadding='0' ><tr><td align='left'><img src='");
+    sb.append(Jenkins.getInstance().getRootUrl());
+    sb.append("/favicon.ico' /></td>");
+    sb.append("<td>");
+    sb.append("PR Validator Started to Run Tests against your PR");
+    sb.append("<br />");
+    sb.append("<a target='_blank' href='" + run.getAbsoluteUrl()
+        + "' title='Click here to view the Jenkins Job for the Fork that the pull request came from'>");
+    sb.append("Click here to see Tests Running for " + run.getFullDisplayName());
+    sb.append("</a>");
+    sb.append("</td>");
+    sb.append("</tr></table>");
+    return sb.toString();
+  }
+  
 
   @Override
   public DescriptorImpl getDescriptor() {
