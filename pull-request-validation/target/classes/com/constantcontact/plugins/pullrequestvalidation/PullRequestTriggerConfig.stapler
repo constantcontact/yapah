@@ -1,0 +1,2 @@
+#Thu Dec 10 16:37:16 EST 2015
+constructor=systemUser,systemUserPassword,repositoryName,repositoryOwner,gitHubRepository,sha,pullRequestUrl
