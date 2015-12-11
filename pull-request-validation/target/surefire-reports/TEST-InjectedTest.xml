@@ -1,5 +1,5 @@
 <?xml version="1.0" encoding="UTF-8"?>
-<testsuite name="InjectedTest" time="1.266" tests="7" errors="0" skipped="0" failures="0">
+<testsuite name="InjectedTest" time="0.914" tests="7" errors="0" skipped="0" failures="0">
   <properties>
     <property name="java.runtime.name" value="Java(TM) SE Runtime Environment"/>
     <property name="sun.boot.library.path" value="/Library/Java/JavaVirtualMachines/jdk1.8.0_45.jdk/Contents/Home/jre/lib"/>
@@ -58,11 +58,11 @@
     <property name="sun.io.unicode.encoding" value="UnicodeBig"/>
     <property name="sun.cpu.isalist" value=""/>
   </properties>
-  <testcase name="com/constantcontact/plugins/pullrequestvalidation/PullRequestCommenter/config.jelly" classname="org.jvnet.hudson.test.JellyTestSuiteBuilder$JellyCheck" time="0.088"/>
-  <testcase name="com/constantcontact/plugins/pullrequestvalidation/PullRequestTrigger/config.jelly" classname="org.jvnet.hudson.test.JellyTestSuiteBuilder$JellyCheck" time="0.181"/>
-  <testcase name="com/constantcontact/plugins/pullrequestvalidation/PullRequestTrigger/global.jelly" classname="org.jvnet.hudson.test.JellyTestSuiteBuilder$JellyCheck" time="0.023"/>
-  <testcase name="com/constantcontact/plugins/pullrequestvalidation/PullRequestTriggerConfig/config.jelly" classname="org.jvnet.hudson.test.JellyTestSuiteBuilder$JellyCheck" time="0.072"/>
-  <testcase name="index.jelly" classname="org.jvnet.hudson.test.JellyTestSuiteBuilder$JellyCheck" time="0.006"/>
+  <testcase name="com/constantcontact/plugins/pullrequestvalidation/PullRequestCommenter/config.jelly" classname="org.jvnet.hudson.test.JellyTestSuiteBuilder$JellyCheck" time="0.104"/>
+  <testcase name="com/constantcontact/plugins/pullrequestvalidation/PullRequestTrigger/config.jelly" classname="org.jvnet.hudson.test.JellyTestSuiteBuilder$JellyCheck" time="0.138"/>
+  <testcase name="com/constantcontact/plugins/pullrequestvalidation/PullRequestTrigger/global.jelly" classname="org.jvnet.hudson.test.JellyTestSuiteBuilder$JellyCheck" time="0.032"/>
+  <testcase name="com/constantcontact/plugins/pullrequestvalidation/PullRequestTriggerConfig/config.jelly" classname="org.jvnet.hudson.test.JellyTestSuiteBuilder$JellyCheck" time="0.095"/>
+  <testcase name="index.jelly" classname="org.jvnet.hudson.test.JellyTestSuiteBuilder$JellyCheck" time="0.004"/>
   <testcase name="org.jvnet.hudson.test.JellyTestSuiteBuilder$JellyTestSuite" classname="org.jvnet.hudson.test.junit.FailedTest" time="0"/>
-  <testcase name="testCliSanity" classname="org.jvnet.hudson.test.PluginAutomaticTestBuilder$CliSanityTest" time="0.896"/>
+  <testcase name="testCliSanity" classname="org.jvnet.hudson.test.PluginAutomaticTestBuilder$CliSanityTest" time="0.541"/>
 </testsuite>

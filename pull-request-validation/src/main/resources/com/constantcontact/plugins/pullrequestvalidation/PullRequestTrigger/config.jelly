@@ -4,28 +4,15 @@
     <f:textarea checkUrl="'${rootURL}/trigger/TimerTrigger/check?value='+encodeURIComponent(this.value)"/>
   </f:entry>
   <f:entry title="Github Repository Configurtation" field="config">
-    <f:block var="it" name="config" items="${instance.config}" minimum="1">
+    <f:repeatable var="it" name="configs" items="${instance.configs}" minimum="1">
       <table width="100%">
-        <j:invokeStatic var="descriptor"
-      className="com.constantcontact.plugins.pullrequestvalidation.PullRequestTriggerConfig"
-      method="getClassDescriptor"/>
-  <f:entry title="${%Github Repository}" field="gitHubRepository">
-    <f:textbox value="${it.gitHubRepository}"/>
-  </f:entry>
-  <f:entry title="${%Repository Owner}" field="repositoryOwner">
-    <f:textbox value="${it.repositoryOwner}"/>
-  </f:entry>
-  <f:entry title="${%Repository Name}" field="repositoryName">
-    <f:textbox value="${it.repositoryName}"/>
-  </f:entry>
-  <f:entry title="${%Systen User}" field="systemUser">
-    <f:textbox value="${it.systemUser}"/>
-  </f:entry>
-   <f:entry title="${%Systen User Password}" field="systemUserPassword">
-    <f:password value="${it.systemUserPassword}"/>
-  </f:entry>
+        <st:include page="config.jelly" class="com.constantcontact.plugins.pullrequestvalidation.PullRequestTriggerConfig"/>
+        <f:entry title="">
+          <div align="right">
+            <f:repeatableDeleteButton/>
+          </div>
+        </f:entry>
       </table>
-
-    </f:block>
+    </f:repeatable>
   </f:entry>
 </j:jelly>
