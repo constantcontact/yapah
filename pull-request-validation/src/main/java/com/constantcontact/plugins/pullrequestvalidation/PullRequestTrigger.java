@@ -11,6 +11,7 @@ import hudson.model.StringParameterValue;
 import hudson.triggers.Trigger;
 import hudson.triggers.TriggerDescriptor;
 
+import java.io.File;
 import java.io.IOException;
 import java.util.ArrayList;
 import java.util.Collections;
@@ -20,6 +21,7 @@ import java.util.logging.Logger;
 import jenkins.model.Jenkins;
 
 import org.eclipse.egit.github.core.Comment;
+import org.eclipse.egit.github.core.CommitFile;
 import org.eclipse.egit.github.core.CommitStatus;
 import org.eclipse.egit.github.core.PullRequest;
 import org.eclipse.egit.github.core.Repository;
@@ -112,24 +114,27 @@ public class PullRequestTrigger extends Trigger<AbstractProject<?, ?>> {
           doRun(pullRequest);
 
         } else {
-          Long mostRecentComment = Collections.max(commentIds);
-
+          Long mostRecentComment = Collections.max(commentIds);        
+          
           for (Comment comment : comments) {
             if (comment.getId() == mostRecentComment) {
               if (!comment.getBody().contains("PR Validator")) {
                 LOGGER.info("Should fire off a trigger, no bad comments found");
                 isSupposedToRun = true;
                 createCommentAndCommitStatus(issueService, commitService, repository, pullRequest);
-                
+                doRun(pullRequest);
+                          
+              }else {
                 List<RepositoryCommit> commits = commitService.getCommits(repository, sha, null);
-                
-                
+                                
                 for(RepositoryCommit commit : commits ){
-                  LOGGER.info("commit.getAuthor().getCreatedAt(): " + commit.getAuthor().getCreatedAt());
-                  if(commit.getAuthor().getCreatedAt().after(comment.getCreatedAt())){
-                    doRun(pullRequest);
-                  }
-                }          
+                  LOGGER.info("commit.getCommit().getAuthor().getDate(): " + commit.getCommit().getAuthor().getDate());
+                  if(commit.getCommit().getAuthor().getDate().after(comment.getCreatedAt())){
+                    isSupposedToRun = true;
+                  }                  
+                }                
+                createCommentAndCommitStatus(issueService, commitService, repository, pullRequest);
+                doRun(pullRequest);
               }
             }
           }
