@@ -35,6 +35,8 @@ public class PullRequestCommenter extends Publisher implements SimpleBuildStep {
     // TODO Auto-generated constructor stub
   }
 
+  private static final String PR_VALIDATOR = "~PR_VALIDATOR_FINISH!~";
+
   @Override
   public void perform(Run<?, ?> run, FilePath workspace, Launcher launcher,
       TaskListener listener) throws InterruptedException, IOException {
@@ -75,20 +77,20 @@ public class PullRequestCommenter extends Publisher implements SimpleBuildStep {
       commitStatus.setState(CommitStatus.STATE_ERROR);
       sb.append("PR Validator: NOT Good To Merge, job was Unstable");
     }
-       
-    listener.getLogger().println("Description Length: " +  sb.toString().length());
-    commitStatus.setDescription(sb.toString());    
+
+    listener.getLogger().println("Description Length: " + sb.toString().length());
+    commitStatus.setDescription(sb.toString());
     commitService.createStatus(repository, sha, commitStatus);
-    
+
     issueService.createComment(repository, pullRequestNumber,
         getPoolingComment(run));
   }
-  
+
   private String getPoolingComment(Run<?, ?> run) {
     StringBuilder sb = new StringBuilder();
     sb.append("<table cellspacing='0' cellpadding='0' ><tr><td align='left'><img src='");
     sb.append(Jenkins.getInstance().getRootUrl());
-    sb.append("/favicon.ico' /></td>");
+    sb.append("/favicon.ico' alt='" + PR_VALIDATOR + "'/></td>");
     sb.append("<td>");
     sb.append("PR Validator Finished Running tests against your PR");
     sb.append("<br />");
@@ -100,7 +102,6 @@ public class PullRequestCommenter extends Publisher implements SimpleBuildStep {
     sb.append("</tr></table>");
     return sb.toString();
   }
-  
 
   @Override
   public DescriptorImpl getDescriptor() {

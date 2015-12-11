@@ -16,7 +16,6 @@ public final class PullRequestEnvironmentContributor extends EnvironmentContribu
   private void buildEnvironmentFor(Run<?, ?> run, EnvVars envVars) {
     PullRequestTriggerCause cause = run.getCause(PullRequestTriggerCause.class);
     if (cause != null) {
-      envVars.put(name("node"), cause.getGitHubRepository());
       envVars.put(name("repositoryName"), cause.getRepositoryName());
       envVars.put(name("repositoryOwner"), cause.getRepositoryOwner());
       envVars.put(name("systemUser"), cause.getSystemUser());
@@ -26,7 +25,7 @@ public final class PullRequestEnvironmentContributor extends EnvironmentContribu
   }
 
   private String name(String envVar) {
-    return "filesfound_setting_" + envVar;
+    return "var_setting_" + envVar;
   }
 
 }
