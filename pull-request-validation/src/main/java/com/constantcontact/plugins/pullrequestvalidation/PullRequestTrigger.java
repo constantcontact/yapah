@@ -62,7 +62,7 @@ public class PullRequestTrigger extends Trigger<AbstractProject<?, ?>> {
   private boolean                                   isSupposedToRun = false;
 
   private static final Logger                       LOGGER          = LoggerFactory.getLogger(PullRequestTrigger.class);
-  private static final String                       PR_VALIDATOR    = Messages.getString("PullRequestTrigger.0"); //$NON-NLS-1$
+  private static final String                       PR_VALIDATOR    = "~PR_VALIDATOR";
 
   private final ArrayList<PullRequestTriggerConfig> additionalConfigs;
 
@@ -76,7 +76,7 @@ public class PullRequestTrigger extends Trigger<AbstractProject<?, ?>> {
     PullRequestTriggerConfig firstConfig;
 
     if (configsCopy.isEmpty()) {
-      firstConfig = new PullRequestTriggerConfig(Messages.getString("PullRequestTrigger.1"), null, null, null, null, null, null); //$NON-NLS-1$
+      firstConfig = new PullRequestTriggerConfig("", null, null, null, null, null, null);
     } else {
       firstConfig = configsCopy.remove(0);
     }
@@ -95,10 +95,10 @@ public class PullRequestTrigger extends Trigger<AbstractProject<?, ?>> {
   // called reflectively by XStream
   private PullRequestTrigger() {
     this.repositoryName = null;
-    this.repositoryOwner = Messages.getString("PullRequestTrigger.2"); //$NON-NLS-1$
-    this.systemUser = Messages.getString("PullRequestTrigger.3"); //$NON-NLS-1$
-    this.systemUserPassword = Messages.getString("PullRequestTrigger.4"); //$NON-NLS-1$
-    this.gitHubRepository = Messages.getString("PullRequestTrigger.5"); //$NON-NLS-1$
+    this.repositoryOwner = "";
+    this.systemUser = "";
+    this.systemUserPassword = "";
+    this.gitHubRepository = "";
     this.additionalConfigs = null;
   }
 
@@ -115,7 +115,7 @@ public class PullRequestTrigger extends Trigger<AbstractProject<?, ?>> {
 
   private String getStartDescription(final AbstractProject<?, ?> project) {
     StringBuilder sb = new StringBuilder();
-    sb.append(Messages.getString("PullRequestTrigger.6")); //$NON-NLS-1$
+    sb.append("Jenkins Started to Run Tests at");
     sb.append(project.getName());
     return sb.toString();
   }
@@ -134,10 +134,10 @@ public class PullRequestTrigger extends Trigger<AbstractProject<?, ?>> {
         listener = new StreamTaskListener(getLogFile());
         PrintStream logger = listener.getLogger();
 
-        logger.println(Messages.getString("PullRequestTrigger.7") + config.getGitHubRepository()); //$NON-NLS-1$
+        logger.println("Polling for " + config.getGitHubRepository());
 
-        logger.println(Messages.getString("PullRequestTrigger.8")); //$NON-NLS-1$
-        GitHubClient githubClient = new GitHubClient(Messages.getString("PullRequestTrigger.9")); //$NON-NLS-1$
+        logger.println("Instantiating Clients");
+        GitHubClient githubClient = new GitHubClient("github.roving.com");
         githubClient.setCredentials(config.getSystemUser(), config.getSystemUserPassword());
 
         RepositoryService repositoryService = new RepositoryService(githubClient);
@@ -145,38 +145,38 @@ public class PullRequestTrigger extends Trigger<AbstractProject<?, ?>> {
             .getRepository(config.getRepositoryOwner(), config.getRepositoryName());
 
         PullRequestService pullRequestService = new PullRequestService(githubClient);
-        logger.println(Messages.getString("PullRequestTrigger.10") + config.getGitHubRepository()); //$NON-NLS-1$
+        logger.println("Gathering Pull Requests for " + config.getGitHubRepository());
 
-        List<PullRequest> pullRequests = pullRequestService.getPullRequests(repository, Messages.getString("PullRequestTrigger.11")); //$NON-NLS-1$
+        List<PullRequest> pullRequests = pullRequestService.getPullRequests(repository, "open");
         CommitService commitService = new CommitService(githubClient);
         IssueService issueService = new IssueService(githubClient);
 
         if (pullRequests.size() == 0) {
-          logger.println(Messages.getString("PullRequestTrigger.12") + config.getGitHubRepository()); //$NON-NLS-1$
+          logger.println("Found no Pull Requests for " + config.getGitHubRepository());
           continue;
         }
 
         for (PullRequest pullRequest : pullRequests) {
           this.sha = pullRequest.getHead().getSha();
-          logger.println(Messages.getString("PullRequestTrigger.13") + this.sha); //$NON-NLS-1$
+          logger.println("Got SHA1 :" + this.sha);
 
           this.pullRequestUrl = pullRequest.getUrl();
-          logger.println(Messages.getString("PullRequestTrigger.14") + this.pullRequestUrl); //$NON-NLS-1$
+          logger.println("Pull Request URL : " + this.pullRequestUrl);
 
           List<Comment> comments = issueService.getComments(config.getRepositoryOwner(), config.getRepositoryName(),
               pullRequest.getNumber());
 
           HashMap<Long, Comment> commentHash = new HashMap<Long, Comment>();
           for (Comment comment : comments) {
-            LOGGER.info(Messages.getString("PullRequestTrigger.15") + comment.getBody()); //$NON-NLS-1$
+            LOGGER.info("########## COMMENT BODY ###" + comment.getBody());
             if (comment.getBody().contains(PR_VALIDATOR)) {
               commentHash.put(comment.getId(), comment);
             }
           }
 
           if (commentHash.size() == 0) {
-            logger.println(Messages.getString("PullRequestTrigger.16")); //$NON-NLS-1$
-            LOGGER.info(Messages.getString("PullRequestTrigger.17")); //$NON-NLS-1$
+            logger.println("Initial Pull Request found, kicking off a build");
+            LOGGER.info("########## Found no comment ids");
             isSupposedToRun = true;
             doRun(pullRequest, logger, issueService, commitService, repository, config);
 
@@ -184,7 +184,7 @@ public class PullRequestTrigger extends Trigger<AbstractProject<?, ?>> {
             Long mostRecentCommentId = Collections.max(commentHash.keySet());
             
             Comment mostRecentComment = commentHash.get(mostRecentCommentId);
-            LOGGER.info(Messages.getString("PullRequestTrigger.18") + mostRecentCommentId); //$NON-NLS-1$
+            LOGGER.info("########## Most recent comment id ### " + mostRecentCommentId);
 
             List<RepositoryCommit> commits = commitService.getCommits(repository, sha, null);
             if (mostRecentComment.getBody().contains(PR_VALIDATOR)) {
@@ -200,8 +200,8 @@ public class PullRequestTrigger extends Trigger<AbstractProject<?, ?>> {
 
         }
       } catch (Exception ex) {
-        LOGGER.info(Messages.getString("PullRequestTrigger.19")); //$NON-NLS-1$
-        LOGGER.info(ex.getMessage() + Messages.getString("PullRequestTrigger.20") + ex.getStackTrace().toString()); //$NON-NLS-1$
+        LOGGER.info("Exception occurred stopping the trigger");
+        LOGGER.info(ex.getMessage() + "\n" + ex.getStackTrace().toString());
       }
 
     }
@@ -212,21 +212,21 @@ public class PullRequestTrigger extends Trigger<AbstractProject<?, ?>> {
     try {
 
       if (isSupposedToRun) {
-        logger.println(Messages.getString("PullRequestTrigger.21")); //$NON-NLS-1$
-        logger.println(Messages.getString("PullRequestTrigger.22")); //$NON-NLS-1$
+        logger.println("Commit occurred after the last build, rebuilding");
+        logger.println("Creating a comment and updating commit status");
         createCommentAndCommitStatus(issueService, commitService, repository, pullRequest);
         PullRequestTriggerConfig expandedConfig = localConfig;
         List<ParameterValue> stringParams = new ArrayList<ParameterValue>();
-        stringParams.add(new StringParameterValue(Messages.getString("PullRequestTrigger.23"), localConfig.getSystemUser())); //$NON-NLS-1$
-        stringParams.add(new PasswordParameterValue(Messages.getString("PullRequestTrigger.24"), localConfig.getSystemUserPassword())); //$NON-NLS-1$
-        stringParams.add(new StringParameterValue(Messages.getString("PullRequestTrigger.25"), localConfig.getRepositoryName())); //$NON-NLS-1$
-        stringParams.add(new StringParameterValue(Messages.getString("PullRequestTrigger.26"), localConfig.getRepositoryOwner())); //$NON-NLS-1$
-        stringParams.add(new StringParameterValue(Messages.getString("PullRequestTrigger.27"), localConfig.getGitHubRepository())); //$NON-NLS-1$
+        stringParams.add(new StringParameterValue("systemUser", localConfig.getSystemUser()));
+        stringParams.add(new PasswordParameterValue("systemUserPassword", localConfig.getSystemUserPassword()));
+        stringParams.add(new StringParameterValue("repositoryName", localConfig.getRepositoryName()));
+        stringParams.add(new StringParameterValue("repositoryOwner", localConfig.getRepositoryOwner()));
+        stringParams.add(new StringParameterValue("gitHubRepository", localConfig.getGitHubRepository()));
         stringParams
-            .add(new StringParameterValue(Messages.getString("PullRequestTrigger.28"), pullRequest.getHead().getRepo().getCloneUrl())); //$NON-NLS-1$
-        stringParams.add(new StringParameterValue(Messages.getString("PullRequestTrigger.29"), sha)); //$NON-NLS-1$
-        stringParams.add(new StringParameterValue(Messages.getString("PullRequestTrigger.30"), pullRequestUrl)); //$NON-NLS-1$
-        stringParams.add(new StringParameterValue(Messages.getString("PullRequestTrigger.31"), String.valueOf(pullRequest //$NON-NLS-1$
+            .add(new StringParameterValue("gitHubHeadRepository", pullRequest.getHead().getRepo().getCloneUrl()));
+        stringParams.add(new StringParameterValue("sha", sha));
+        stringParams.add(new StringParameterValue("pullRequestUrl", pullRequestUrl));
+        stringParams.add(new StringParameterValue("pullRequestNumber", String.valueOf(pullRequest
             .getNumber())));
         ParametersAction params = new ParametersAction(stringParams);
 
@@ -234,8 +234,8 @@ public class PullRequestTrigger extends Trigger<AbstractProject<?, ?>> {
 
       }
     } catch (Exception ex) {
-      LOGGER.info(Messages.getString("PullRequestTrigger.32")); //$NON-NLS-1$
-      LOGGER.info(ex.getMessage() + Messages.getString("PullRequestTrigger.33") + ex.getStackTrace().toString()); //$NON-NLS-1$
+      LOGGER.info("Exception occurred stopping the trigger");
+      LOGGER.info(ex.getMessage() + "\n" + ex.getStackTrace().toString());
     } finally {
       isSupposedToRun = false;
     }
@@ -262,23 +262,23 @@ public class PullRequestTrigger extends Trigger<AbstractProject<?, ?>> {
 
   private String getPoolingComment() {
     StringBuilder sb = new StringBuilder();
-    sb.append(Messages.getString("PullRequestTrigger.34")); //$NON-NLS-1$
+    sb.append("<table cellspacing='0' cellpadding='0' ><tr><td align='left'><img src='");
     sb.append(Jenkins.getInstance().getRootUrl());
-    sb.append(Messages.getString("PullRequestTrigger.35")+PR_VALIDATOR+Messages.getString("PullRequestTrigger.36")); //$NON-NLS-1$ //$NON-NLS-2$
-    sb.append(Messages.getString("PullRequestTrigger.37")); //$NON-NLS-1$
-    sb.append(Messages.getString("PullRequestTrigger.38")); //$NON-NLS-1$
-    sb.append(Messages.getString("PullRequestTrigger.39")); //$NON-NLS-1$
+    sb.append("/favicon.ico' alt='"+PR_VALIDATOR+"'/></td>");
+    sb.append("<td>");
+    sb.append("PR Validator Started to Run Tests against your PR");
+    sb.append("<br />");
     try {
-      sb.append(Messages.getString("PullRequestTrigger.40") + this.job.getAbsoluteUrl() //$NON-NLS-1$
-          + Messages.getString("PullRequestTrigger.41")); //$NON-NLS-1$
-      sb.append(Messages.getString("PullRequestTrigger.42") + job.getName()); //$NON-NLS-1$
-      sb.append(Messages.getString("PullRequestTrigger.43")); //$NON-NLS-1$
+      sb.append("<a target='_blank' href='" + this.job.getAbsoluteUrl()
+          + "' title='Click here to view the Jenkins Job for the Fork that the pull request came from'>");
+      sb.append("Click here to see Tests Running for " + job.getName());
+      sb.append("</a>");
     } catch (IllegalStateException ise) {
-      LOGGER.info(Messages.getString("PullRequestTrigger.44")); //$NON-NLS-1$
-      LOGGER.info(ise.getMessage() + Messages.getString("PullRequestTrigger.45") + ise.getStackTrace().toString()); //$NON-NLS-1$
+      LOGGER.info("Exception occurred stopping the trigger");
+      LOGGER.info(ise.getMessage() + "\n" + ise.getStackTrace().toString());
     }
-    sb.append(Messages.getString("PullRequestTrigger.46")); //$NON-NLS-1$
-    sb.append(Messages.getString("PullRequestTrigger.47")); //$NON-NLS-1$
+    sb.append("</td>");
+    sb.append("</tr></table>");
     return sb.toString();
   }
 
@@ -300,15 +300,15 @@ public class PullRequestTrigger extends Trigger<AbstractProject<?, ?>> {
     }
 
     public String getIconFileName() {
-      return Messages.getString("PullRequestTrigger.48"); //$NON-NLS-1$
+      return "clipboard.png";
     }
 
     public String getDisplayName() {
-      return Messages.getString("PullRequestTrigger.49"); //$NON-NLS-1$
+      return "PR Validator Polling Log";
     }
 
     public String getUrlName() {
-      return Messages.getString("PullRequestTrigger.50"); //$NON-NLS-1$
+      return "PRValidatorPollLog";
     }
 
     public String getLog() throws IOException {
@@ -322,7 +322,7 @@ public class PullRequestTrigger extends Trigger<AbstractProject<?, ?>> {
   }
 
   public File getLogFile() throws IOException {
-    File file = new File(job.getRootDir(), Messages.getString("PullRequestTrigger.51")); //$NON-NLS-1$
+    File file = new File(job.getRootDir(), "PR-Validator.log");
     if (!file.exists()) {
       if (!file.getParentFile().exists()) {
         file.getParentFile().mkdirs();
@@ -357,7 +357,7 @@ public class PullRequestTrigger extends Trigger<AbstractProject<?, ?>> {
      */
     @Override
     public String getDisplayName() {
-      return Messages.getString("PullRequestTrigger.52"); //$NON-NLS-1$
+      return "Github Pull Request Poller";
     }
 
   }

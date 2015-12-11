@@ -35,20 +35,20 @@ public class PullRequestCommenter extends Publisher implements SimpleBuildStep {
     // TODO Auto-generated constructor stub
   }
 
-  private static final String PR_VALIDATOR = Messages.getString("PullRequestCommenter.0"); //$NON-NLS-1$
+  private static final String PR_VALIDATOR = "~PR_VALIDATOR_FINISH!~";
 
   @Override
   public void perform(Run<?, ?> run, FilePath workspace, Launcher launcher,
       TaskListener listener) throws InterruptedException, IOException {
 
-    final String sha = run.getEnvironment(listener).get(Messages.getString("PullRequestCommenter.1")); //$NON-NLS-1$
-    final String systemUser = run.getEnvironment(listener).get(Messages.getString("PullRequestCommenter.2")); //$NON-NLS-1$
-    final String systemUserPassword = run.getEnvironment(listener).get(Messages.getString("PullRequestCommenter.3")); //$NON-NLS-1$
-    final String repositoryName = run.getEnvironment(listener).get(Messages.getString("PullRequestCommenter.4")); //$NON-NLS-1$
-    final String repositoryOwner = run.getEnvironment(listener).get(Messages.getString("PullRequestCommenter.5")); //$NON-NLS-1$
-    final String pullRequestNumber = run.getEnvironment(listener).get(Messages.getString("PullRequestCommenter.6")); //$NON-NLS-1$
+    final String sha = run.getEnvironment(listener).get("sha");
+    final String systemUser = run.getEnvironment(listener).get("systemUser");
+    final String systemUserPassword = run.getEnvironment(listener).get("systemUserPassword");
+    final String repositoryName = run.getEnvironment(listener).get("repositoryName");
+    final String repositoryOwner = run.getEnvironment(listener).get("repositoryOwner");
+    final String pullRequestNumber = run.getEnvironment(listener).get("pullRequestNumber");
 
-    GitHubClient githubClient = new GitHubClient(Messages.getString("PullRequestCommenter.7")); //$NON-NLS-1$
+    GitHubClient githubClient = new GitHubClient("github.roving.com");
     githubClient.setCredentials(systemUser, systemUserPassword);
 
     RepositoryService repositoryService = new RepositoryService(githubClient);
@@ -63,22 +63,22 @@ public class PullRequestCommenter extends Publisher implements SimpleBuildStep {
 
     if (run.getResult() == Result.SUCCESS) {
       commitStatus.setState(CommitStatus.STATE_SUCCESS);
-      sb.append(Messages.getString("PullRequestCommenter.8")); //$NON-NLS-1$
+      sb.append("PR Validator: Good To Merge, all Tests Passed.");
     } else if (run.getResult() == Result.ABORTED) {
       commitStatus.setState(CommitStatus.STATE_ERROR);
-      sb.append(Messages.getString("PullRequestCommenter.9")); //$NON-NLS-1$
+      sb.append("PR Validator: NOT Good To Merge, job was Aborted.");
     } else if (run.getResult() == Result.FAILURE) {
       commitStatus.setState(CommitStatus.STATE_FAILURE);
-      sb.append(Messages.getString("PullRequestCommenter.10")); //$NON-NLS-1$
+      sb.append("PR Validator: NOT Good To Merge, Tests Failed!");
     } else if (run.getResult() == Result.NOT_BUILT) {
       commitStatus.setState(CommitStatus.STATE_ERROR);
-      sb.append(Messages.getString("PullRequestCommenter.11")); //$NON-NLS-1$
+      sb.append("PR Validator: NOT Good To Merge, job was not built.");
     } else if (run.getResult() == Result.UNSTABLE) {
       commitStatus.setState(CommitStatus.STATE_ERROR);
-      sb.append(Messages.getString("PullRequestCommenter.12")); //$NON-NLS-1$
+      sb.append("PR Validator: NOT Good To Merge, job was Unstable");
     }
 
-    listener.getLogger().println(Messages.getString("PullRequestCommenter.13") + sb.toString().length()); //$NON-NLS-1$
+    listener.getLogger().println("Description Length: " + sb.toString().length());
     commitStatus.setDescription(sb.toString());
     commitService.createStatus(repository, sha, commitStatus);
 
@@ -88,18 +88,18 @@ public class PullRequestCommenter extends Publisher implements SimpleBuildStep {
 
   private String getPoolingComment(Run<?, ?> run) {
     StringBuilder sb = new StringBuilder();
-    sb.append(Messages.getString("PullRequestCommenter.14")); //$NON-NLS-1$
+    sb.append("<table cellspacing='0' cellpadding='0' ><tr><td align='left'><img src='");
     sb.append(Jenkins.getInstance().getRootUrl());
-    sb.append(Messages.getString("PullRequestCommenter.15") + PR_VALIDATOR + Messages.getString("PullRequestCommenter.16")); //$NON-NLS-1$ //$NON-NLS-2$
-    sb.append(Messages.getString("PullRequestCommenter.17")); //$NON-NLS-1$
-    sb.append(Messages.getString("PullRequestCommenter.18")); //$NON-NLS-1$
-    sb.append(Messages.getString("PullRequestCommenter.19")); //$NON-NLS-1$
-    sb.append(Messages.getString("PullRequestCommenter.20") + run.getAbsoluteUrl() //$NON-NLS-1$
-        + Messages.getString("PullRequestCommenter.21")); //$NON-NLS-1$
-    sb.append(Messages.getString("PullRequestCommenter.22") + run.getFullDisplayName()); //$NON-NLS-1$
-    sb.append(Messages.getString("PullRequestCommenter.23")); //$NON-NLS-1$
-    sb.append(Messages.getString("PullRequestCommenter.24")); //$NON-NLS-1$
-    sb.append(Messages.getString("PullRequestCommenter.25")); //$NON-NLS-1$
+    sb.append("/favicon.ico' alt='" + PR_VALIDATOR + "'/></td>");
+    sb.append("<td>");
+    sb.append("PR Validator Finished Running tests against your PR");
+    sb.append("<br />");
+    sb.append("<a target='_blank' href='" + run.getAbsoluteUrl()
+        + "' title='Click here to view the Jenkins Job for the Fork that the pull request came from'>");
+    sb.append("Click here to see Tests Running for " + run.getFullDisplayName());
+    sb.append("</a>");
+    sb.append("</td>");
+    sb.append("</tr></table>");
     return sb.toString();
   }
 
@@ -126,7 +126,7 @@ public class PullRequestCommenter extends Publisher implements SimpleBuildStep {
     }
 
     public String getDisplayName() {
-      return Messages.getString("PullRequestCommenter.26"); //$NON-NLS-1$
+      return "Github API Pull Request Validator";
     }
 
     @Override

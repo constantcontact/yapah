@@ -16,16 +16,16 @@ public final class PullRequestEnvironmentContributor extends EnvironmentContribu
   private void buildEnvironmentFor(Run<?, ?> run, EnvVars envVars) {
     PullRequestTriggerCause cause = run.getCause(PullRequestTriggerCause.class);
     if (cause != null) {
-      envVars.put(name(Messages.getString("PullRequestEnvironmentContributor.0")), cause.getRepositoryName()); //$NON-NLS-1$
-      envVars.put(name(Messages.getString("PullRequestEnvironmentContributor.1")), cause.getRepositoryOwner()); //$NON-NLS-1$
-      envVars.put(name(Messages.getString("PullRequestEnvironmentContributor.2")), cause.getSystemUser()); //$NON-NLS-1$
-      envVars.put(name(Messages.getString("PullRequestEnvironmentContributor.3")), cause.getSystemUserPassword()); //$NON-NLS-1$
-      envVars.put(name(Messages.getString("PullRequestEnvironmentContributor.4")), cause.getGitHubRepository()); //$NON-NLS-1$
+      envVars.put(name("repositoryName"), cause.getRepositoryName());
+      envVars.put(name("repositoryOwner"), cause.getRepositoryOwner());
+      envVars.put(name("systemUser"), cause.getSystemUser());
+      envVars.put(name("systemUserPassword"), cause.getSystemUserPassword());
+      envVars.put(name("gitHubRepository"), cause.getGitHubRepository());
     }
   }
 
   private String name(String envVar) {
-    return Messages.getString("PullRequestEnvironmentContributor.5") + envVar; //$NON-NLS-1$
+    return "var_setting_" + envVar;
   }
 
 }

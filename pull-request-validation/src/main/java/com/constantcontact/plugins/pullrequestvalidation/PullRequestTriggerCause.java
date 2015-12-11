@@ -27,7 +27,7 @@ public final class PullRequestTriggerCause extends Cause {
   
   @Override
   public String getShortDescription() {
-    return Messages.getString("PullRequestTriggerCause.0");         //$NON-NLS-1$
+    return "Pull request was created or modified";        
   }
 
   @Exported(visibility = 3)
@@ -73,9 +73,9 @@ public final class PullRequestTriggerCause extends Cause {
   
   @Override
   public String toString() {
-    return Objects.toStringHelper(this).add(Messages.getString("PullRequestTriggerCause.1"), repositoryName) //$NON-NLS-1$
-        .add(Messages.getString("PullRequestTriggerCause.2"), systemUser).add(Messages.getString("PullRequestTriggerCause.3"), systemUserPassword) //$NON-NLS-1$ //$NON-NLS-2$
-        .add(Messages.getString("PullRequestTriggerCause.4"), repositoryOwner).add(Messages.getString("PullRequestTriggerCause.5"), gitHubRepository).toString(); //$NON-NLS-1$ //$NON-NLS-2$
+    return Objects.toStringHelper(this).add("repositoryName", repositoryName)
+        .add("systemUser", systemUser).add("systemUserPassword", systemUserPassword)
+        .add("repositoryOwner", repositoryOwner).add("gitHubRepository", gitHubRepository).toString();
   }
 
   
