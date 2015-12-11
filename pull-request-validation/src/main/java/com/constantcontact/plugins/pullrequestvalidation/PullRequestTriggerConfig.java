@@ -50,12 +50,12 @@ public final class PullRequestTriggerConfig implements Describable<PullRequestTr
   // called reflectively by XStream
   private PullRequestTriggerConfig() {
     this.repositoryName = null;
-    this.repositoryOwner = "";
-    this.systemUser = "";
-    this.systemUserPassword = "";
-    this.gitHubRepository = "";
-    this.sha = "";
-    this.pullRequestUrl = "";
+    this.repositoryOwner = Messages.getString("PullRequestTriggerConfig.0"); //$NON-NLS-1$
+    this.systemUser = Messages.getString("PullRequestTriggerConfig.1"); //$NON-NLS-1$
+    this.systemUserPassword = Messages.getString("PullRequestTriggerConfig.2"); //$NON-NLS-1$
+    this.gitHubRepository = Messages.getString("PullRequestTriggerConfig.3"); //$NON-NLS-1$
+    this.sha = Messages.getString("PullRequestTriggerConfig.4"); //$NON-NLS-1$
+    this.pullRequestUrl = Messages.getString("PullRequestTriggerConfig.5"); //$NON-NLS-1$
 
   }
 
@@ -106,7 +106,7 @@ public final class PullRequestTriggerConfig implements Describable<PullRequestTr
     @Override
     public String getDisplayName() {
       // Not used.
-      return "";
+      return Messages.getString("PullRequestTriggerConfig.6"); //$NON-NLS-1$
     }
 
     public FormValidation doTestConfiguration(
@@ -163,9 +163,9 @@ public final class PullRequestTriggerConfig implements Describable<PullRequestTr
   
   @Override
   public String toString() {
-    return Objects.toStringHelper(this).add("repositoryName", repositoryName)
-        .add("systemUser", systemUser).add("systemUserPassword", systemUserPassword)
-        .add("repositoryOwner", repositoryOwner).add("gitHubRepository", gitHubRepository).toString();
+    return Objects.toStringHelper(this).add(Messages.getString("PullRequestTriggerConfig.7"), repositoryName) //$NON-NLS-1$
+        .add(Messages.getString("PullRequestTriggerConfig.8"), systemUser).add(Messages.getString("PullRequestTriggerConfig.9"), systemUserPassword) //$NON-NLS-1$ //$NON-NLS-2$
+        .add(Messages.getString("PullRequestTriggerConfig.10"), repositoryOwner).add(Messages.getString("PullRequestTriggerConfig.11"), gitHubRepository).toString(); //$NON-NLS-1$ //$NON-NLS-2$
   }
 
 }

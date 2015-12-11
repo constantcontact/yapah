@@ -3,5 +3,7 @@
   This view is used to render the installed plugins page.
 -->
 <div>
-  This plugin is a sample to explain how to write a Jenkins plugin.
+  <h1>YAPahh</h1>
+   <p>Yet Anohter Pull Request validation Tool.  This plugin consists of a trigger to poll for any new poll requests baesd on a cron that is supplied in the build and a post action build item that comments on the pull request with a pass / fail message.  Pull requests can still be merged but are done so with a warning. </p>
+  
 </div>
