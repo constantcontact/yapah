@@ -122,88 +122,91 @@ public class PullRequestTrigger extends Trigger<AbstractProject<?, ?>> {
 
   @Override
   public void run() {
-    for (PullRequestTriggerConfig config : getConfigs()) {
-      if (null == config.getGitHubRepository()) {
-        return;
-      }
-      StreamTaskListener listener = null;
-      try {
-        this.sha = null;
-        this.pullRequestUrl = null;
+    StreamTaskListener listener;
+    try {
+      listener = new StreamTaskListener(getLogFile());
 
-        listener = new StreamTaskListener(getLogFile());
-        PrintStream logger = listener.getLogger();
-
-        logger.println("Polling for " + config.getGitHubRepository());
-
-        logger.println("Instantiating Clients");
-        GitHubClient githubClient = new GitHubClient("github.roving.com");
-        githubClient.setCredentials(config.getSystemUser(), config.getSystemUserPassword());
-
-        RepositoryService repositoryService = new RepositoryService(githubClient);
-        Repository repository = repositoryService
-            .getRepository(config.getRepositoryOwner(), config.getRepositoryName());
-
-        PullRequestService pullRequestService = new PullRequestService(githubClient);
-        logger.println("Gathering Pull Requests for " + config.getGitHubRepository());
-
-        List<PullRequest> pullRequests = pullRequestService.getPullRequests(repository, "open");
-        CommitService commitService = new CommitService(githubClient);
-        IssueService issueService = new IssueService(githubClient);
-
-        if (pullRequests.size() == 0) {
-          logger.println("Found no Pull Requests for " + config.getGitHubRepository());
-          continue;
+      PrintStream logger = listener.getLogger();
+      for (PullRequestTriggerConfig config : getConfigs()) {
+        if (null == config.getGitHubRepository()) {
+          return;
         }
+        try {
+          this.sha = null;
+          this.pullRequestUrl = null;
 
-        for (PullRequest pullRequest : pullRequests) {
-          this.sha = pullRequest.getHead().getSha();
-          logger.println("Got SHA1 :" + this.sha);
+          logger.println("Polling for " + config.getGitHubRepository());
 
-          this.pullRequestUrl = pullRequest.getUrl();
-          logger.println("Pull Request URL : " + this.pullRequestUrl);
+          logger.println("Instantiating Clients");
+          GitHubClient githubClient = new GitHubClient("github.roving.com");
+          githubClient.setCredentials(config.getSystemUser(), config.getSystemUserPassword());
 
-          List<Comment> comments = issueService.getComments(config.getRepositoryOwner(), config.getRepositoryName(),
-              pullRequest.getNumber());
+          RepositoryService repositoryService = new RepositoryService(githubClient);
+          Repository repository = repositoryService
+              .getRepository(config.getRepositoryOwner(), config.getRepositoryName());
 
-          HashMap<Long, Comment> commentHash = new HashMap<Long, Comment>();
-          for (Comment comment : comments) {
-            LOGGER.info("########## COMMENT BODY ###" + comment.getBody());
-            if (comment.getBody().contains(PR_VALIDATOR)) {
-              commentHash.put(comment.getId(), comment);
-            }
+          PullRequestService pullRequestService = new PullRequestService(githubClient);
+          logger.println("Gathering Pull Requests for " + config.getGitHubRepository());
+
+          List<PullRequest> pullRequests = pullRequestService.getPullRequests(repository, "open");
+          CommitService commitService = new CommitService(githubClient);
+          IssueService issueService = new IssueService(githubClient);
+
+          if (pullRequests.size() == 0) {
+            logger.println("Found no Pull Requests for " + config.getGitHubRepository());
+            continue;
           }
 
-          if (commentHash.size() == 0) {
-            logger.println("Initial Pull Request found, kicking off a build");
-            LOGGER.info("########## Found no comment ids");
-            isSupposedToRun = true;
-            doRun(pullRequest, logger, issueService, commitService, repository, config);
+          for (PullRequest pullRequest : pullRequests) {
+            this.sha = pullRequest.getHead().getSha();
+            logger.println("Got SHA1 : " + this.sha);
 
-          } else {
-            Long mostRecentCommentId = Collections.max(commentHash.keySet());
-            
-            Comment mostRecentComment = commentHash.get(mostRecentCommentId);
-            LOGGER.info("########## Most recent comment id ### " + mostRecentCommentId);
+            this.pullRequestUrl = pullRequest.getUrl();
+            logger.println("Pull Request URL : " + this.pullRequestUrl);
 
-            List<RepositoryCommit> commits = commitService.getCommits(repository, sha, null);
-            if (mostRecentComment.getBody().contains(PR_VALIDATOR)) {
-              for (RepositoryCommit commit : commits) {
-                if (commit.getCommit().getAuthor().getDate().after(mostRecentComment.getCreatedAt())) {
-                  isSupposedToRun = true;
-                }
+            List<Comment> comments = issueService.getComments(config.getRepositoryOwner(), config.getRepositoryName(),
+                pullRequest.getNumber());
+
+            HashMap<Long, Comment> commentHash = new HashMap<Long, Comment>();
+            for (Comment comment : comments) {
+              if (comment.getBody().contains(PR_VALIDATOR)) {
+                commentHash.put(comment.getId(), comment);
               }
             }
 
-            doRun(pullRequest, logger, issueService, commitService, repository, config);
+            if (commentHash.size() == 0) {
+              logger.println("Initial Pull Request found, kicking off a build");
+              isSupposedToRun = true;
+              doRun(pullRequest, logger, issueService, commitService, repository, config);
+
+            } else {
+              Long mostRecentCommentId = Collections.max(commentHash.keySet());
+
+              Comment mostRecentComment = commentHash.get(mostRecentCommentId);
+              List<RepositoryCommit> commits = commitService.getCommits(repository, sha, null);
+              if (mostRecentComment.getBody().contains(PR_VALIDATOR)) {
+                for (RepositoryCommit commit : commits) {
+                  if (commit.getCommit().getAuthor().getDate().after(mostRecentComment.getCreatedAt())) {
+                    isSupposedToRun = true;
+                  }
+                }
+              }
+              if(!isSupposedToRun){
+                logger.println("No new commits since the last build, not triggering build");
+              }
+              doRun(pullRequest, logger, issueService, commitService, repository, config);
+            }
+
           }
-
+        } catch (Exception ex) {
+          LOGGER.info("Exception occurred stopping the trigger");
+          LOGGER.info(ex.getMessage() + "\n" + ex.getStackTrace().toString());
         }
-      } catch (Exception ex) {
-        LOGGER.info("Exception occurred stopping the trigger");
-        LOGGER.info(ex.getMessage() + "\n" + ex.getStackTrace().toString());
-      }
 
+      }
+    } catch (IOException e) {
+      // TODO Auto-generated catch block
+      e.printStackTrace();
     }
   }
 
@@ -264,7 +267,7 @@ public class PullRequestTrigger extends Trigger<AbstractProject<?, ?>> {
     StringBuilder sb = new StringBuilder();
     sb.append("<table cellspacing='0' cellpadding='0' ><tr><td align='left'><img src='");
     sb.append(Jenkins.getInstance().getRootUrl());
-    sb.append("/favicon.ico' alt='"+PR_VALIDATOR+"'/></td>");
+    sb.append("/favicon.ico' alt='" + PR_VALIDATOR + "'/></td>");
     sb.append("<td>");
     sb.append("PR Validator Started to Run Tests against your PR");
     sb.append("<br />");
