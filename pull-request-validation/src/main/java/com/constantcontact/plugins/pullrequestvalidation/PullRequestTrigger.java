@@ -122,7 +122,7 @@ public class PullRequestTrigger extends Trigger<AbstractProject<?, ?>> {
   @Override
   public void run() {
     for (PullRequestTriggerConfig config : getConfigs()) {
-      if (null == this.gitHubRepository) {
+      if (null == config.getGitHubRepository()) {
         return;
       }
       StreamTaskListener listener = null;
@@ -132,7 +132,7 @@ public class PullRequestTrigger extends Trigger<AbstractProject<?, ?>> {
 
         listener = new StreamTaskListener(getLogFile());
         PrintStream logger = listener.getLogger();
-        
+
         logger.println("Polling for " + config.getGitHubRepository());
 
         logger.println("Instantiating Clients");
@@ -162,7 +162,7 @@ public class PullRequestTrigger extends Trigger<AbstractProject<?, ?>> {
           this.pullRequestUrl = pullRequest.getUrl();
           logger.println("Pull Request URL : " + this.pullRequestUrl);
 
-          List<Comment> comments = issueService.getComments(getRepositoryOwner(), getRepositoryName(),
+          List<Comment> comments = issueService.getComments(config.getRepositoryOwner(), config.getRepositoryName(),
               pullRequest.getNumber());
 
           List<Long> commentIds = new ArrayList<Long>();
@@ -182,35 +182,25 @@ public class PullRequestTrigger extends Trigger<AbstractProject<?, ?>> {
 
             for (Comment comment : comments) {
               if (comment.getId() == mostRecentComment) {
-                if (!comment.getBody().contains("PR Validator")) {
-                  logger.println("Last Comment made was not made from this plugin, assuming it needs to be rebuilt");
-                  isSupposedToRun = true;
-                  doRun(pullRequest, logger, issueService, commitService, repository, config);
-
-                } else {
-                  List<RepositoryCommit> commits = commitService.getCommits(repository, sha, null);
-
-                  for (RepositoryCommit commit : commits) {
-
-                    if (commit.getCommit().getAuthor().getDate().after(comment.getCreatedAt())) {
-                      isSupposedToRun = true;
-                    }
+                List<RepositoryCommit> commits = commitService.getCommits(repository, sha, null);
+                for (RepositoryCommit commit : commits) {
+                  if (commit.getCommit().getAuthor().getDate().after(comment.getCreatedAt())) {
+                    isSupposedToRun = true;
                   }
-
-                  doRun(pullRequest, logger, issueService, commitService, repository, config);
                 }
+
               }
             }
+            doRun(pullRequest, logger, issueService, commitService, repository, config);
           }
 
         }
       } catch (Exception ex) {
         LOGGER.info("Exception occurred stopping the trigger");
         LOGGER.info(ex.getMessage() + "\n" + ex.getStackTrace().toString());
-      } 
+      }
 
     }
-    return;
   }
 
   private void doRun(final PullRequest pullRequest, PrintStream logger, IssueService issueService,
@@ -227,8 +217,9 @@ public class PullRequestTrigger extends Trigger<AbstractProject<?, ?>> {
         stringParams.add(new PasswordParameterValue("systemUserPassword", localConfig.getSystemUserPassword()));
         stringParams.add(new StringParameterValue("repositoryName", localConfig.getRepositoryName()));
         stringParams.add(new StringParameterValue("repositoryOwner", localConfig.getRepositoryOwner()));
-        stringParams.add(new StringParameterValue("gitHubRepository", localConfig.getGitHubRepository()));                      
-        stringParams.add(new StringParameterValue("gitHubHeadRepository", pullRequest.getHead().getRepo().getCloneUrl()));
+        stringParams.add(new StringParameterValue("gitHubRepository", localConfig.getGitHubRepository()));
+        stringParams
+            .add(new StringParameterValue("gitHubHeadRepository", pullRequest.getHead().getRepo().getCloneUrl()));
         stringParams.add(new StringParameterValue("sha", sha));
         stringParams.add(new StringParameterValue("pullRequestUrl", pullRequestUrl));
         stringParams.add(new StringParameterValue("pullRequestNumber", String.valueOf(pullRequest
@@ -236,7 +227,11 @@ public class PullRequestTrigger extends Trigger<AbstractProject<?, ?>> {
         ParametersAction params = new ParametersAction(stringParams);
 
         job.scheduleBuild2(0, new PullRequestTriggerCause(expandedConfig), params);
+
       }
+    } catch (Exception ex) {
+      LOGGER.info("Exception occurred stopping the trigger");
+      LOGGER.info(ex.getMessage() + "\n" + ex.getStackTrace().toString());
     } finally {
       isSupposedToRun = false;
     }
@@ -269,26 +264,29 @@ public class PullRequestTrigger extends Trigger<AbstractProject<?, ?>> {
     sb.append("<td>");
     sb.append("PR Validator Started to Run Tests against your PR");
     sb.append("<br />");
-    sb.append("<a target='_blank' href='" + job.getAbsoluteUrl()
-        + "' title='Click here to view the Jenkins Job for the Fork that the pull request came from'>");
-    sb.append("Click here to see Tests Running for " + job.getName());
-    sb.append("</a>");
+    try {
+      sb.append("<a target='_blank' href='" + this.job.getAbsoluteUrl()
+          + "' title='Click here to view the Jenkins Job for the Fork that the pull request came from'>");
+      sb.append("Click here to see Tests Running for " + job.getName());
+      sb.append("</a>");
+    } catch (IllegalStateException ise) {
+      LOGGER.info("Exception occurred stopping the trigger");
+      LOGGER.info(ise.getMessage() + "\n" + ise.getStackTrace().toString());
+    }
     sb.append("</td>");
     sb.append("</tr></table>");
     return sb.toString();
   }
 
-  
   @Override
   public Collection<? extends Action> getProjectActions() {
-      if (job == null) {
-          return Collections.emptyList();
-      }
+    if (job == null) {
+      return Collections.emptyList();
+    }
 
-      return Collections.singleton(new PullRequestPollingAction());
+    return Collections.singleton(new PullRequestPollingAction());
   }
-  
- 
+
   /**
    * Action object for {@link Project}. Used to display the polling log.
    */
@@ -319,17 +317,24 @@ public class PullRequestTrigger extends Trigger<AbstractProject<?, ?>> {
     }
   }
 
-  public File getLogFile() {
-    return new File(job.getRootDir(), "PR-Validator.log");
+  public File getLogFile() throws IOException {
+    File file = new File(job.getRootDir(), "PR-Validator.log");
+    if (!file.exists()) {
+      if (!file.getParentFile().exists()) {
+        file.getParentFile().mkdirs();
+      }
+      file.createNewFile();
+    }
+    return file;
   }
-  
+
   @Override
   public DescriptorImpl getDescriptor() {
-      return (DescriptorImpl) super.getDescriptor();
+    return (DescriptorImpl) super.getDescriptor();
   }
 
   public static DescriptorImpl get() {
-      return Trigger.all().get(DescriptorImpl.class);
+    return Trigger.all().get(DescriptorImpl.class);
   }
 
   @Extension

@@ -1,0 +1,9 @@
+Polling for https://github.roving.com/Mobile/pull-request-validation-plugin.git
+Instantiating Clients
+Gathering Pull Requests for https://github.roving.com/Mobile/pull-request-validation-plugin.git
+Got SHA1 :5894387c2f80c01203f50ce0a242284e36ce912f
+Pull Request URL : https://github.roving.com/api/v3/repos/Mobile/pull-request-validation-plugin/pulls/1
+Initial Pull Request found, kicking off a build
+Creating a comment and updating commit status
+Commit occurred after the last build, rebuilding
+Creating a comment and updating commit status
