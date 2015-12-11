@@ -4,7 +4,7 @@
     <f:textarea checkUrl="'${rootURL}/trigger/TimerTrigger/check?value='+encodeURIComponent(this.value)"/>
   </f:entry>
   <f:entry title="Github Repository Configurtation" field="config">
-    <f:repeatable var="it" name="config" items="${instance.config}" minimum="1">
+    <f:block var="it" name="config" items="${instance.config}" minimum="1">
       <table width="100%">
         <j:invokeStatic var="descriptor"
       className="com.constantcontact.plugins.pullrequestvalidation.PullRequestTriggerConfig"
@@ -25,7 +25,7 @@
     <f:password value="${it.systemUserPassword}"/>
   </f:entry>
       </table>
-       <f:repeatableDeleteButton />
-    </f:repeatable>
+
+    </f:block>
   </f:entry>
 </j:jelly>
