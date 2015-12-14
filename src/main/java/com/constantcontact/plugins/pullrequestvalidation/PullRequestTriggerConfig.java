@@ -116,6 +116,26 @@ public final class PullRequestTriggerConfig implements Describable<PullRequestTr
         @QueryParameter("repositoryOwner") final String repositoryOwner,
         @QueryParameter("gitHubRepository") final String gitHubRepository)
         throws IOException, InterruptedException {
+      
+      if(repositoryName.length() < 1){
+        FormValidation.error(Messages.config_form_validation_1());
+      }
+      
+      if(systemUser.length() < 1){
+        FormValidation.error(Messages.config_form_validation_2());
+      }
+      
+      if(systemUserPassword.length() < 1){
+        FormValidation.error(Messages.config_form_validation_3());
+      }
+      
+      if(repositoryOwner.length() < 1){
+        FormValidation.error(Messages.config_form_validation_4());
+      }
+      
+      if(gitHubRepository.length() < 1){
+        FormValidation.error(Messages.config_form_validation_5());
+      }
 
       return FormValidation.ok();
     }
