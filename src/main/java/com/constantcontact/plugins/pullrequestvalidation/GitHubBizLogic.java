@@ -23,29 +23,29 @@ public class GitHubBizLogic {
     private GitHubClient githubClient;
     private RepositoryService repositoryService;
     private PullRequestService pullRequestService;
-    private Logger logger;
+    private LogWriter logWriter;
     private CommitService commitService;
     private IssueService issueService;
     private PullRequestTriggerConfig config;
 
-    public GitHubBizLogic(Logger logger, GitHubClient githubClient, RepositoryService repositoryService,
+    public GitHubBizLogic(LogWriter logWriter, GitHubClient githubClient, RepositoryService repositoryService,
                           PullRequestService pullRequestService, CommitService commitService, IssueService issueService,
                           PullRequestTriggerConfig config) {
         this.githubClient = githubClient;
         this.repositoryService = repositoryService;
         this.pullRequestService = pullRequestService;
-        this.logger = logger;
+        this.logWriter = logWriter;
         this.commitService = commitService;
         this.issueService = issueService;
         this.config = config;
     }
 
     protected void logGitHubRepo(String repo) {
-        logger.log(Messages.trigger_logging_1() + repo);
+        logWriter.log(Messages.trigger_logging_1() + repo);
     }
 
     protected void logGitHubURL(String url) {
-        logger.log(Messages.trigger_logging_2() + url);
+        logWriter.log(Messages.trigger_logging_2() + url);
     }
 
     protected List<PullRequest> setup(String systemUser, String systemPassword, String repoOwner, String repoName, String repo)
@@ -54,21 +54,21 @@ public class GitHubBizLogic {
 
         Repository repository = repositoryService.getRepository(repoOwner, repoName);
 
-        logger.log(Messages.trigger_logging_3() + repo);
+        logWriter.log(Messages.trigger_logging_3() + repo);
 
         return pullRequestService.getPullRequests(repository, "open");
     }
 
     protected void logZeroPR(String repo) {
-        logger.log(Messages.trigger_logging_4() + repo);
+        logWriter.log(Messages.trigger_logging_4() + repo);
     }
 
     protected void logSHA(String sha) {
-        logger.log(Messages.trigger_logging_5() + sha);
+        logWriter.log(Messages.trigger_logging_5() + sha);
     }
 
     protected void logPRURL(String url) {
-        logger.log(Messages.trigger_logging_6() + url);
+        logWriter.log(Messages.trigger_logging_6() + url);
     }
 
     protected HashMap<Long, Comment> captureComments(PullRequest pullRequest, String commentBodyIndicator) throws IOException {
@@ -84,7 +84,7 @@ public class GitHubBizLogic {
 
     protected boolean doZeroCommentsWork(boolean shouldRun) {
         boolean shouldRunSetting = shouldRun;
-        logger.log(Messages.trigger_logging_7());
+        logWriter.log(Messages.trigger_logging_7());
         shouldRunSetting = true;
         return shouldRunSetting;
     }
@@ -104,7 +104,7 @@ public class GitHubBizLogic {
             }
         }
         if (! shouldRunSetting) {
-            logger.log(Messages.trigger_logging_8());
+            logWriter.log(Messages.trigger_logging_8());
         }
 
         return shouldRunSetting;
