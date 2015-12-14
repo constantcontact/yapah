@@ -36,7 +36,7 @@ public class PullRequestCommenter extends Publisher implements SimpleBuildStep {
   }
 
   private static final String PR_VALIDATOR = "~PR_VALIDATOR_FINISH!~";
-
+  
   @Override
   public void perform(Run<?, ?> run, FilePath workspace, Launcher launcher,
       TaskListener listener) throws InterruptedException, IOException {
@@ -47,8 +47,9 @@ public class PullRequestCommenter extends Publisher implements SimpleBuildStep {
     final String repositoryName = run.getEnvironment(listener).get("repositoryName");
     final String repositoryOwner = run.getEnvironment(listener).get("repositoryOwner");
     final String pullRequestNumber = run.getEnvironment(listener).get("pullRequestNumber");
+    final String localGithubUrl = run.getEnvironment(listener).get("localGithubUrl");
 
-    GitHubClient githubClient = new GitHubClient("github.roving.com");
+    GitHubClient githubClient = new GitHubClient(localGithubUrl);
     githubClient.setCredentials(systemUser, systemUserPassword);
 
     RepositoryService repositoryService = new RepositoryService(githubClient);
