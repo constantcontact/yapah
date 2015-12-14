@@ -3,6 +3,7 @@
 The Pull Request Validator Jenkins Plugin was designed to easily create a way for a project to be built in jenkins after a PR request has been submitted.  The plugin consists of two components, trigger and a post action.  One will not work with out the other.  Setup of this plugin is fairly simple. 
 
 Once Installed:
+
 1. Goto Manage Jenkins
 2. Goto Configure System
 3. Look for Github Pull Request Poller and enter your jenkins domain, it must be at least 4 characters long and should not contain http:// or https://
