@@ -3,16 +3,16 @@ Group-Id: com.constantcontact.plugins
 Short-Name: pull-request-validation
 Long-Name: Github API Pull Request Validation
 Url: https://wiki.jenkins-ci.org/display/JENKINS/TODO+Plugin
-Plugin-Version: 1.0-SNAPSHOT (private-66c760f4-rdavis)
+Plugin-Version: 1.0-SNAPSHOT (private-03a17f2b-rdavis)
 Hudson-Version: 1.580.1
 Jenkins-Version: 1.580.1
 Plugin-Developers: 
 Libraries: /Users/rdavis/repos/pull-request-validation-plugin/pull-req
- uest-validation/target/classes,/Users/rdavis/.m2/repository/com/googl
- e/code/gson/gson/2.2.2/gson-2.2.2.jar,/Users/rdavis/.m2/repository/or
- g/eclipse/mylyn/github/org.eclipse.egit.github.core/2.1.5/org.eclipse
- .egit.github.core-2.1.5.jar,/Users/rdavis/.m2/repository/org/slf4j/sl
- f4j-api/1.7.13/slf4j-api-1.7.13.jar
+ uest-validation/target/classes,/Users/rdavis/.m2/repository/org/eclip
+ se/mylyn/github/org.eclipse.egit.github.core/2.1.5/org.eclipse.egit.g
+ ithub.core-2.1.5.jar,/Users/rdavis/.m2/repository/org/slf4j/slf4j-api
+ /1.7.13/slf4j-api-1.7.13.jar,/Users/rdavis/.m2/repository/com/google/
+ code/gson/gson/2.2.2/gson-2.2.2.jar
 Resource-Path: /Users/rdavis/repos/pull-request-validation-plugin/pull
  -request-validation/src/main/webapp
 

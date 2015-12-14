@@ -197,7 +197,7 @@ public class PullRequestTrigger extends Trigger<AbstractProject<?, ?>> {
                   }
                 }
               }
-              if(!isSupposedToRun){
+              if (!isSupposedToRun) {
                 logger.println(Messages.trigger_logging_8());
               }
               doRun(pullRequest, logger, issueService, commitService, repository, config);
@@ -275,6 +275,7 @@ public class PullRequestTrigger extends Trigger<AbstractProject<?, ?>> {
     sb.append(Messages.trigger_pooling_comment_1());
     sb.append(Jenkins.getInstance().getRootUrl());
     sb.append(Messages.trigger_pooling_comment_2());
+    sb.append(PR_VALIDATOR);
     sb.append(Messages.trigger_pooling_comment_3());
     try {
       sb.append(Messages.trigger_pooling_comment_4());
@@ -352,7 +353,11 @@ public class PullRequestTrigger extends Trigger<AbstractProject<?, ?>> {
 
   @Extension
   public static final class DescriptorImpl extends TriggerDescriptor {
-    
+
+    public DescriptorImpl() {
+      load();
+    }
+
     public String githubUrl;
 
     /**
@@ -370,33 +375,32 @@ public class PullRequestTrigger extends Trigger<AbstractProject<?, ?>> {
     public String getDisplayName() {
       return Messages.trigger_displayname();
     }
-    
+
     @Override
     public boolean configure(StaplerRequest req, JSONObject formData) throws FormException {
       this.githubUrl = formData.getString("githubUrl");
       save();
       return super.configure(req, formData);
     }
-    
+
     public FormValidation doCheckGithubUrl(@QueryParameter String githubUrl) throws IOException, ServletException {
-      if(githubUrl.length() == 0 || githubUrl.length() < 4 ){
+      if (githubUrl.length() == 0 || githubUrl.length() < 4) {
         return FormValidation.error(Messages.trigger_form_validation_1());
       }
-      
-      if(githubUrl.contains("http://")){        
+
+      if (githubUrl.contains("http://")) {
         this.githubUrl = githubUrl.replaceFirst("http://", "");
       }
-      
-      if(githubUrl.contains("https://")){
+
+      if (githubUrl.contains("https://")) {
         this.githubUrl = githubUrl.replaceFirst("https://", "");
       }
       return FormValidation.ok();
     }
-    
-    public String getGithubUrl(){
+
+    public String getGithubUrl() {
       return this.githubUrl;
     }
-       
 
   }
 

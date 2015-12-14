@@ -78,7 +78,7 @@ public class Messages {
     }
 
     /**
-     * PR Validator Finished Running tests against your PR&lt;br />
+     * '/>&lt;/td>&lt;td>PR Validator Finished Running tests against your PR&lt;br />
      * 
      */
     public static String commenter_pooling_comment_3() {
@@ -86,7 +86,7 @@ public class Messages {
     }
 
     /**
-     * PR Validator Finished Running tests against your PR&lt;br />
+     * '/>&lt;/td>&lt;td>PR Validator Finished Running tests against your PR&lt;br />
      * 
      */
     public static Localizable _commenter_pooling_comment_3() {
@@ -110,7 +110,7 @@ public class Messages {
     }
 
     /**
-     * /favicon.ico' alt='" + PR_VALIDATOR + "'/>&lt;/td>&lt;td>
+     * /favicon.ico' alt='
      * 
      */
     public static String commenter_pooling_comment_2() {
@@ -118,7 +118,7 @@ public class Messages {
     }
 
     /**
-     * /favicon.ico' alt='" + PR_VALIDATOR + "'/>&lt;/td>&lt;td>
+     * /favicon.ico' alt='
      * 
      */
     public static Localizable _commenter_pooling_comment_2() {
@@ -366,7 +366,7 @@ public class Messages {
     }
 
     /**
-     * PR Validator Started to Run Tests against your PR&lt;br />
+     * '/>&lt;/td>&lt;td>PR Validator Started to Run Tests against your PR&lt;br />
      * 
      */
     public static String trigger_pooling_comment_3() {
@@ -374,7 +374,7 @@ public class Messages {
     }
 
     /**
-     * PR Validator Started to Run Tests against your PR&lt;br />
+     * '/>&lt;/td>&lt;td>PR Validator Started to Run Tests against your PR&lt;br />
      * 
      */
     public static Localizable _trigger_pooling_comment_3() {
@@ -398,7 +398,7 @@ public class Messages {
     }
 
     /**
-     * /favicon.ico' alt='" + PR_VALIDATOR + "'/>&lt;/td>&lt;td>
+     * /favicon.ico' alt='
      * 
      */
     public static String trigger_pooling_comment_2() {
@@ -406,7 +406,7 @@ public class Messages {
     }
 
     /**
-     * /favicon.ico' alt='" + PR_VALIDATOR + "'/>&lt;/td>&lt;td>
+     * /favicon.ico' alt='
      * 
      */
     public static Localizable _trigger_pooling_comment_2() {
