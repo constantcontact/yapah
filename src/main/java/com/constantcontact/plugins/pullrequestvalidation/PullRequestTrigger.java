@@ -14,7 +14,10 @@ import hudson.util.StreamTaskListener;
 import jenkins.model.Jenkins;
 import net.sf.json.JSONObject;
 import org.apache.commons.jelly.XMLOutput;
-import org.eclipse.egit.github.core.*;
+import org.eclipse.egit.github.core.Comment;
+import org.eclipse.egit.github.core.CommitStatus;
+import org.eclipse.egit.github.core.PullRequest;
+import org.eclipse.egit.github.core.Repository;
 import org.eclipse.egit.github.core.client.GitHubClient;
 import org.eclipse.egit.github.core.service.CommitService;
 import org.eclipse.egit.github.core.service.IssueService;
@@ -132,58 +135,32 @@ public class PullRequestTrigger extends Trigger<AbstractProject<?, ?>> {
           githubWorker.logGitHubRepo(config.getGitHubRepository());
           githubWorker.logGitHubURL(getDescriptor().getGithubUrl());
 
-
-          githubClient.setCredentials(config.getSystemUser(), config.getSystemUserPassword());
-          Repository repository = repositoryService
-              .getRepository(config.getRepositoryOwner(), config.getRepositoryName());
-          logger.log(Messages.trigger_logging_3() + config.getGitHubRepository());
-
-          List<PullRequest> pullRequests = pullRequestService.getPullRequests(repository, "open");
+          List<PullRequest> pullRequests = githubWorker
+                  .setup(config.getSystemUser(), config.getSystemUserPassword(), config.getRepositoryOwner(), config
+                          .getRepositoryName(), config.getGitHubRepository());
 
 
           if (pullRequests.size() == 0) {
-            logger.log(Messages.trigger_logging_4() + config.getGitHubRepository());
+            githubWorker.logZeroPR(config.getGitHubRepository());
             continue;
           }
 
           for (PullRequest pullRequest : pullRequests) {
             this.sha = pullRequest.getHead().getSha();
-            logger.log(Messages.trigger_logging_5() + this.sha);
+            githubWorker.logSHA(this.sha);
 
             this.pullRequestUrl = pullRequest.getUrl();
-            logger.log(Messages.trigger_logging_6() + this.pullRequestUrl);
+            githubWorker.logPRURL(this.pullRequestUrl);
 
-            List<Comment> comments = issueService.getComments(config.getRepositoryOwner(), config.getRepositoryName(),
-                pullRequest.getNumber());
-
-            HashMap<Long, Comment> commentHash = new HashMap<Long, Comment>();
-            for (Comment comment : comments) {
-              if (comment.getBody().contains(PR_VALIDATOR)) {
-                commentHash.put(comment.getId(), comment);
-              }
-            }
+            HashMap<Long, Comment> commentHash = githubWorker.captureComments(pullRequest, PR_VALIDATOR);
 
             if (commentHash.size() == 0) {
-              logger.log(Messages.trigger_logging_7());
-              isSupposedToRun = true;
-              doRun(pullRequest, logger, issueService, commitService, repository, config);
+              isSupposedToRun = githubWorker.doZeroCommentsWork(isSupposedToRun);
+              doRun(pullRequest, logger, issueService, commitService, githubWorker.getRepository(), config);
 
             } else {
-              Long mostRecentCommentId = Collections.max(commentHash.keySet());
-
-              Comment mostRecentComment = commentHash.get(mostRecentCommentId);
-              List<RepositoryCommit> commits = commitService.getCommits(repository, sha, null);
-              if (mostRecentComment.getBody().contains(PR_VALIDATOR)) {
-                for (RepositoryCommit commit : commits) {
-                  if (commit.getCommit().getAuthor().getDate().after(mostRecentComment.getCreatedAt())) {
-                    isSupposedToRun = true;
-                  }
-                }
-              }
-              if (!isSupposedToRun) {
-                logger.log(Messages.trigger_logging_8());
-              }
-              doRun(pullRequest, logger, issueService, commitService, repository, config);
+              githubWorker.doNonZeroCommentsWork(isSupposedToRun, commentHash, this.sha, PR_VALIDATOR);
+              doRun(pullRequest, logger, issueService, commitService, githubWorker.getRepository(), config);
             }
 
           }

@@ -27,6 +27,7 @@ public class GitHubBizLogic {
     private CommitService commitService;
     private IssueService issueService;
     private PullRequestTriggerConfig config;
+    private Repository repository;
 
     public GitHubBizLogic(LogWriter logWriter, GitHubClient githubClient, RepositoryService repositoryService,
                           PullRequestService pullRequestService, CommitService commitService, IssueService issueService,
@@ -52,7 +53,7 @@ public class GitHubBizLogic {
             throws IOException {
         githubClient.setCredentials(systemUser, systemPassword);
 
-        Repository repository = repositoryService.getRepository(repoOwner, repoName);
+        setRepository(repositoryService.getRepository(repoOwner, repoName));
 
         logWriter.log(Messages.trigger_logging_3() + repo);
 
@@ -89,13 +90,13 @@ public class GitHubBizLogic {
         return shouldRunSetting;
     }
 
-    protected boolean doNonZeroCommentsWork(boolean shouldRun, HashMap<Long, Comment> commentHash, Repository repository, String sha,
+    protected boolean doNonZeroCommentsWork(boolean shouldRun, HashMap<Long, Comment> commentHash, String sha,
                                             String commentBodyIndicator) throws IOException {
         boolean shouldRunSetting = shouldRun;
         Long mostRecentCommentId = Collections.max(commentHash.keySet());
 
         Comment mostRecentComment = commentHash.get(mostRecentCommentId);
-        List<RepositoryCommit> commits = commitService.getCommits(repository, sha, null);
+        List<RepositoryCommit> commits = commitService.getCommits(getRepository(), sha, null);
         if (mostRecentComment.getBody().contains(commentBodyIndicator)) {
             for (RepositoryCommit commit : commits) {
                 if (commit.getCommit().getAuthor().getDate().after(mostRecentComment.getCreatedAt())) {
@@ -108,5 +109,13 @@ public class GitHubBizLogic {
         }
 
         return shouldRunSetting;
+    }
+
+    protected Repository getRepository() {
+        return repository;
+    }
+
+    protected void setRepository(Repository repository) {
+        this.repository = repository;
     }
 }
