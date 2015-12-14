@@ -13,6 +13,8 @@ import hudson.tasks.Publisher;
 import hudson.util.FormValidation;
 
 import java.io.IOException;
+import java.util.Arrays;
+import java.util.List;
 
 import jenkins.model.Jenkins;
 import jenkins.tasks.SimpleBuildStep;
@@ -26,7 +28,6 @@ import org.eclipse.egit.github.core.service.IssueService;
 import org.eclipse.egit.github.core.service.RepositoryService;
 import org.kohsuke.stapler.DataBoundConstructor;
 import org.kohsuke.stapler.StaplerRequest;
-import com.constantcontact.plugins.pullrequestvalidation.Messages;
 
 public class PullRequestCommenter extends Publisher implements SimpleBuildStep {
 
@@ -37,7 +38,7 @@ public class PullRequestCommenter extends Publisher implements SimpleBuildStep {
   }
 
   private static final String PR_VALIDATOR = "~PR_VALIDATOR_FINISH!~";
-  
+
   @Override
   public void perform(Run<?, ?> run, FilePath workspace, Launcher launcher,
       TaskListener listener) throws InterruptedException, IOException {
@@ -49,6 +50,14 @@ public class PullRequestCommenter extends Publisher implements SimpleBuildStep {
     final String repositoryOwner = run.getEnvironment(listener).get("repositoryOwner");
     final String pullRequestNumber = run.getEnvironment(listener).get("pullRequestNumber");
     final String localGithubUrl = run.getEnvironment(listener).get("localGithubUrl");
+
+    List<String> nullValidationForPostBuild = Arrays.asList(new String[] { sha, systemUser, systemUserPassword, repositoryName, repositoryOwner,
+        pullRequestNumber, localGithubUrl });
+    
+    if(nullValidationForPostBuild.contains("") || nullValidationForPostBuild.contains(null)){
+      listener.getLogger().println(Messages.commenter_null_validation());
+      return;
+    }
 
     GitHubClient githubClient = new GitHubClient(localGithubUrl);
     githubClient.setCredentials(systemUser, systemUserPassword);
@@ -62,7 +71,7 @@ public class PullRequestCommenter extends Publisher implements SimpleBuildStep {
 
     CommitStatus commitStatus = new CommitStatus();
     commitStatus.setState(CommitStatus.STATE_SUCCESS);
-    
+
     if (run.getResult() == Result.SUCCESS) {
       commitStatus.setState(CommitStatus.STATE_SUCCESS);
       sb.append(Messages.commenter_status_pass());
