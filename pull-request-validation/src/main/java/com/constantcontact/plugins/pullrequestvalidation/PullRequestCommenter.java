@@ -26,6 +26,7 @@ import org.eclipse.egit.github.core.service.IssueService;
 import org.eclipse.egit.github.core.service.RepositoryService;
 import org.kohsuke.stapler.DataBoundConstructor;
 import org.kohsuke.stapler.StaplerRequest;
+import com.constantcontact.plugins.pullrequestvalidation.Messages;
 
 public class PullRequestCommenter extends Publisher implements SimpleBuildStep {
 
@@ -61,25 +62,24 @@ public class PullRequestCommenter extends Publisher implements SimpleBuildStep {
 
     CommitStatus commitStatus = new CommitStatus();
     commitStatus.setState(CommitStatus.STATE_SUCCESS);
-
+    
     if (run.getResult() == Result.SUCCESS) {
       commitStatus.setState(CommitStatus.STATE_SUCCESS);
-      sb.append("PR Validator: Good To Merge, all Tests Passed.");
+      sb.append(Messages.commenter_status_pass());
     } else if (run.getResult() == Result.ABORTED) {
       commitStatus.setState(CommitStatus.STATE_ERROR);
-      sb.append("PR Validator: NOT Good To Merge, job was Aborted.");
+      sb.append(Messages.commenter_status_aborted());
     } else if (run.getResult() == Result.FAILURE) {
       commitStatus.setState(CommitStatus.STATE_FAILURE);
-      sb.append("PR Validator: NOT Good To Merge, Tests Failed!");
+      sb.append(Messages.commenter_status_failure());
     } else if (run.getResult() == Result.NOT_BUILT) {
       commitStatus.setState(CommitStatus.STATE_ERROR);
-      sb.append("PR Validator: NOT Good To Merge, job was not built.");
+      sb.append(Messages.commenter_status_notbuilt());
     } else if (run.getResult() == Result.UNSTABLE) {
       commitStatus.setState(CommitStatus.STATE_ERROR);
-      sb.append("PR Validator: NOT Good To Merge, job was Unstable");
+      sb.append(Messages.commenter_status_unstable());
     }
 
-    listener.getLogger().println("Description Length: " + sb.toString().length());
     commitStatus.setDescription(sb.toString());
     commitService.createStatus(repository, sha, commitStatus);
 
@@ -89,18 +89,16 @@ public class PullRequestCommenter extends Publisher implements SimpleBuildStep {
 
   private String getPoolingComment(Run<?, ?> run) {
     StringBuilder sb = new StringBuilder();
-    sb.append("<table cellspacing='0' cellpadding='0' ><tr><td align='left'><img src='");
+    sb.append(Messages.commenter_pooling_comment_1());
     sb.append(Jenkins.getInstance().getRootUrl());
-    sb.append("/favicon.ico' alt='" + PR_VALIDATOR + "'/></td>");
-    sb.append("<td>");
-    sb.append("PR Validator Finished Running tests against your PR");
-    sb.append("<br />");
-    sb.append("<a target='_blank' href='" + run.getAbsoluteUrl()
-        + "' title='Click here to view the Jenkins Job for the Fork that the pull request came from'>");
-    sb.append("Click here to see Tests Running for " + run.getFullDisplayName());
-    sb.append("</a>");
-    sb.append("</td>");
-    sb.append("</tr></table>");
+    sb.append(Messages.commenter_pooling_comment_2());
+    sb.append(Messages.commenter_pooling_comment_3());
+    sb.append(Messages.commenter_pooling_comment_4());
+    sb.append(run.getAbsoluteUrl());
+    sb.append(Messages.commenter_pooling_comment_5());
+    sb.append(Messages.commenter_pooling_comment_6());
+    sb.append(run.getFullDisplayName());
+    sb.append(Messages.commenter_pooling_comment_7());
     return sb.toString();
   }
 
@@ -127,7 +125,7 @@ public class PullRequestCommenter extends Publisher implements SimpleBuildStep {
     }
 
     public String getDisplayName() {
-      return "Github API Pull Request Validator";
+      return Messages.commenter_pooling_displayname();
     }
 
     @Override

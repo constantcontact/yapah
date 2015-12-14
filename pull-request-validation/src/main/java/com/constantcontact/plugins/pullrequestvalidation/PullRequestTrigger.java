@@ -121,7 +121,7 @@ public class PullRequestTrigger extends Trigger<AbstractProject<?, ?>> {
 
   private String getStartDescription(final AbstractProject<?, ?> project) {
     StringBuilder sb = new StringBuilder();
-    sb.append("Jenkins Started to Run Tests at");
+    sb.append(Messages.trigger_start_description());
     sb.append(project.getName());
     return sb.toString();
   }
@@ -141,9 +141,9 @@ public class PullRequestTrigger extends Trigger<AbstractProject<?, ?>> {
           this.sha = null;
           this.pullRequestUrl = null;
 
-          logger.println("Polling for " + config.getGitHubRepository());
+          logger.println(Messages.trigger_logging_1() + config.getGitHubRepository());
 
-          logger.println("Instantiating Clients");
+          logger.println(Messages.trigger_logging_2() + getDescriptor().getGithubUrl());
           GitHubClient githubClient = new GitHubClient(getDescriptor().getGithubUrl());
           githubClient.setCredentials(config.getSystemUser(), config.getSystemUserPassword());
 
@@ -152,23 +152,23 @@ public class PullRequestTrigger extends Trigger<AbstractProject<?, ?>> {
               .getRepository(config.getRepositoryOwner(), config.getRepositoryName());
 
           PullRequestService pullRequestService = new PullRequestService(githubClient);
-          logger.println("Gathering Pull Requests for " + config.getGitHubRepository());
+          logger.println(Messages.trigger_logging_3() + config.getGitHubRepository());
 
           List<PullRequest> pullRequests = pullRequestService.getPullRequests(repository, "open");
           CommitService commitService = new CommitService(githubClient);
           IssueService issueService = new IssueService(githubClient);
 
           if (pullRequests.size() == 0) {
-            logger.println("Found no Pull Requests for " + config.getGitHubRepository());
+            logger.println(Messages.trigger_logging_4() + config.getGitHubRepository());
             continue;
           }
 
           for (PullRequest pullRequest : pullRequests) {
             this.sha = pullRequest.getHead().getSha();
-            logger.println("Got SHA1 : " + this.sha);
+            logger.println(Messages.trigger_logging_5() + this.sha);
 
             this.pullRequestUrl = pullRequest.getUrl();
-            logger.println("Pull Request URL : " + this.pullRequestUrl);
+            logger.println(Messages.trigger_logging_6() + this.pullRequestUrl);
 
             List<Comment> comments = issueService.getComments(config.getRepositoryOwner(), config.getRepositoryName(),
                 pullRequest.getNumber());
@@ -181,7 +181,7 @@ public class PullRequestTrigger extends Trigger<AbstractProject<?, ?>> {
             }
 
             if (commentHash.size() == 0) {
-              logger.println("Initial Pull Request found, kicking off a build");
+              logger.println(Messages.trigger_logging_7());
               isSupposedToRun = true;
               doRun(pullRequest, logger, issueService, commitService, repository, config);
 
@@ -198,14 +198,14 @@ public class PullRequestTrigger extends Trigger<AbstractProject<?, ?>> {
                 }
               }
               if(!isSupposedToRun){
-                logger.println("No new commits since the last build, not triggering build");
+                logger.println(Messages.trigger_logging_8());
               }
               doRun(pullRequest, logger, issueService, commitService, repository, config);
             }
 
           }
         } catch (Exception ex) {
-          LOGGER.info("Exception occurred stopping the trigger");
+          LOGGER.info(Messages.trigger_logging_9());
           LOGGER.info(ex.getMessage() + "\n" + ex.getStackTrace().toString());
         }
 
@@ -221,8 +221,8 @@ public class PullRequestTrigger extends Trigger<AbstractProject<?, ?>> {
     try {
 
       if (isSupposedToRun) {
-        logger.println("Commit occurred after the last build, rebuilding");
-        logger.println("Creating a comment and updating commit status");
+        logger.println(Messages.trigger_logging_10());
+        logger.println(Messages.trigger_logging_11());
         createCommentAndCommitStatus(issueService, commitService, repository, pullRequest);
         PullRequestTriggerConfig expandedConfig = localConfig;
         List<ParameterValue> stringParams = new ArrayList<ParameterValue>();
@@ -244,7 +244,7 @@ public class PullRequestTrigger extends Trigger<AbstractProject<?, ?>> {
 
       }
     } catch (Exception ex) {
-      LOGGER.info("Exception occurred stopping the trigger");
+      LOGGER.info(Messages.trigger_logging_9());
       LOGGER.info(ex.getMessage() + "\n" + ex.getStackTrace().toString());
     } finally {
       isSupposedToRun = false;
@@ -272,23 +272,22 @@ public class PullRequestTrigger extends Trigger<AbstractProject<?, ?>> {
 
   private String getPoolingComment() {
     StringBuilder sb = new StringBuilder();
-    sb.append("<table cellspacing='0' cellpadding='0' ><tr><td align='left'><img src='");
+    sb.append(Messages.trigger_pooling_comment_1());
     sb.append(Jenkins.getInstance().getRootUrl());
-    sb.append("/favicon.ico' alt='" + PR_VALIDATOR + "'/></td>");
-    sb.append("<td>");
-    sb.append("PR Validator Started to Run Tests against your PR");
-    sb.append("<br />");
+    sb.append(Messages.trigger_pooling_comment_2());
+    sb.append(Messages.trigger_pooling_comment_3());
     try {
-      sb.append("<a target='_blank' href='" + this.job.getAbsoluteUrl()
-          + "' title='Click here to view the Jenkins Job for the Fork that the pull request came from'>");
-      sb.append("Click here to see Tests Running for " + job.getName());
-      sb.append("</a>");
+      sb.append(Messages.trigger_pooling_comment_4());
+      sb.append(this.job.getAbsoluteUrl());
+      sb.append(Messages.trigger_pooling_comment_5());
+      sb.append(Messages.trigger_pooling_comment_6());
+      sb.append(job.getName());
+      sb.append(Messages.trigger_pooling_comment_7());
     } catch (IllegalStateException ise) {
-      LOGGER.info("Exception occurred stopping the trigger");
+      LOGGER.info(Messages.trigger_logging_9());
       LOGGER.info(ise.getMessage() + "\n" + ise.getStackTrace().toString());
     }
-    sb.append("</td>");
-    sb.append("</tr></table>");
+    sb.append(Messages.trigger_pooling_comment_8());
     return sb.toString();
   }
 
@@ -314,7 +313,7 @@ public class PullRequestTrigger extends Trigger<AbstractProject<?, ?>> {
     }
 
     public String getDisplayName() {
-      return "PR Validator Polling Log";
+      return Messages.trigger_log_displayname();
     }
 
     public String getUrlName() {
@@ -369,19 +368,19 @@ public class PullRequestTrigger extends Trigger<AbstractProject<?, ?>> {
      */
     @Override
     public String getDisplayName() {
-      return "Github Pull Request Poller";
+      return Messages.trigger_displayname();
     }
     
     @Override
     public boolean configure(StaplerRequest req, JSONObject formData) throws FormException {
-      githubUrl = formData.getString("githubUrl");
+      this.githubUrl = formData.getString("githubUrl");
       save();
       return super.configure(req, formData);
     }
     
     public FormValidation doCheckGithubUrl(@QueryParameter String githubUrl) throws IOException, ServletException {
       if(githubUrl.length() == 0 || githubUrl.length() < 4 ){
-        return FormValidation.error("Please enter a valid github domain (e.g. github.com)");
+        return FormValidation.error(Messages.trigger_form_validation_1());
       }
       
       if(githubUrl.contains("http://")){        
