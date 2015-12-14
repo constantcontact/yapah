@@ -3,7 +3,7 @@
   <f:entry title="Cron Schedule" field="spec" help="/descriptor/hudson.triggers.TimerTrigger/help/spec">
     <f:textarea checkUrl="'${rootURL}/trigger/TimerTrigger/check?value='+encodeURIComponent(this.value)"/>
   </f:entry>
-  <f:entry title="Github Repository Configurtation" field="config">
+  <f:entry title="${%Github Repository Configurtation}" field="config">
     <f:repeatable var="it" name="configs" items="${instance.configs}" minimum="1">
       <table width="100%">
         <st:include page="config.jelly" class="com.constantcontact.plugins.pullrequestvalidation.PullRequestTriggerConfig"/>

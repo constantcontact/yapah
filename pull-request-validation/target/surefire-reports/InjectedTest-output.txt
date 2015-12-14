@@ -1,27 +1,27 @@
 Exploding /Users/rdavis/.m2/repository/org/jenkins-ci/main/jenkins-war/1.580.1/jenkins-war-1.580.1-war-for-test.jar into /Users/rdavis/repos/pull-request-validation-plugin/pull-request-validation/./target/jenkins-for-test
-Dec 14, 2015 10:02:48 AM org.mortbay.log.Slf4jLog info
+Dec 14, 2015 11:20:13 AM org.mortbay.log.Slf4jLog info
 INFO: Logging to org.slf4j.impl.JDK14LoggerAdapter(org.mortbay.log) via org.mortbay.log.Slf4jLog
-Dec 14, 2015 10:02:48 AM org.mortbay.log.Slf4jLog info
+Dec 14, 2015 11:20:13 AM org.mortbay.log.Slf4jLog info
 INFO: jetty-6.1.26
-Dec 14, 2015 10:02:48 AM org.mortbay.log.Slf4jLog info
+Dec 14, 2015 11:20:13 AM org.mortbay.log.Slf4jLog info
 INFO: NO JSP Support for , did not find org.apache.jasper.servlet.JspServlet
-Dec 14, 2015 10:02:48 AM org.mortbay.log.Slf4jLog info
-INFO: Started SocketConnector@0.0.0.0:49793
-Dec 14, 2015 10:02:49 AM jenkins.InitReactorRunner$1 onAttained
+Dec 14, 2015 11:20:14 AM org.mortbay.log.Slf4jLog info
+INFO: Started SocketConnector@0.0.0.0:53852
+Dec 14, 2015 11:20:14 AM jenkins.InitReactorRunner$1 onAttained
 INFO: Started initialization
-Dec 14, 2015 10:03:00 AM jenkins.InitReactorRunner$1 onAttained
+Dec 14, 2015 11:20:25 AM jenkins.InitReactorRunner$1 onAttained
 INFO: Listed all plugins
-Dec 14, 2015 10:03:00 AM jenkins.InitReactorRunner$1 onAttained
+Dec 14, 2015 11:20:25 AM jenkins.InitReactorRunner$1 onAttained
 INFO: Prepared all plugins
-Dec 14, 2015 10:03:00 AM jenkins.InitReactorRunner$1 onAttained
+Dec 14, 2015 11:20:25 AM jenkins.InitReactorRunner$1 onAttained
 INFO: Started all plugins
-Dec 14, 2015 10:03:00 AM jenkins.InitReactorRunner$1 onAttained
+Dec 14, 2015 11:20:25 AM jenkins.InitReactorRunner$1 onAttained
 INFO: Augmented all extensions
-Dec 14, 2015 10:03:00 AM jenkins.InitReactorRunner$1 onAttained
+Dec 14, 2015 11:20:26 AM jenkins.InitReactorRunner$1 onAttained
 INFO: Loaded all jobs
-Dec 14, 2015 10:03:03 AM jenkins.InitReactorRunner$1 onAttained
+Dec 14, 2015 11:20:28 AM jenkins.InitReactorRunner$1 onAttained
 INFO: Completed initialization
-Dec 14, 2015 10:03:03 AM hudson.UDPBroadcastThread run
+Dec 14, 2015 11:20:28 AM hudson.UDPBroadcastThread run
 WARNING: UDP handling problem
 java.net.SocketException: Can't assign requested address
 	at java.net.PlainDatagramSocketImpl.join(Native Method)
@@ -29,15 +29,15 @@ java.net.SocketException: Can't assign requested address
 	at java.net.MulticastSocket.joinGroup(MulticastSocket.java:323)
 	at hudson.UDPBroadcastThread.run(UDPBroadcastThread.java:76)
 
-Dec 14, 2015 10:03:03 AM org.mortbay.log.Slf4jLog info
+Dec 14, 2015 11:20:28 AM org.mortbay.log.Slf4jLog info
 INFO: jetty-6.1.26
-Dec 14, 2015 10:03:03 AM org.mortbay.log.Slf4jLog info
-INFO: Started SocketConnector@0.0.0.0:49932
-Dec 14, 2015 10:03:05 AM org.mortbay.log.Slf4jLog info
-INFO: Stopped SocketConnector@0.0.0.0:49793
-Dec 14, 2015 10:03:05 AM hudson.TcpSlaveAgentListener shutdown
+Dec 14, 2015 11:20:28 AM org.mortbay.log.Slf4jLog info
+INFO: Started SocketConnector@0.0.0.0:53858
+Dec 14, 2015 11:20:30 AM org.mortbay.log.Slf4jLog info
+INFO: Stopped SocketConnector@0.0.0.0:53852
+Dec 14, 2015 11:20:30 AM hudson.TcpSlaveAgentListener shutdown
 WARNING: Failed to close down TCP port
-java.io.IOException: No such file or directory
+java.io.IOException: No such process
 	at sun.nio.ch.NativeThread.signal(Native Method)
 	at sun.nio.ch.ServerSocketChannelImpl.implCloseSelectableChannel(ServerSocketChannelImpl.java:292)
 	at java.nio.channels.spi.AbstractSelectableChannel.implCloseChannel(AbstractSelectableChannel.java:234)
@@ -57,27 +57,27 @@ java.io.IOException: No such file or directory
 	at org.apache.maven.surefire.booter.ForkedBooter.runSuitesInProcess(ForkedBooter.java:153)
 	at org.apache.maven.surefire.booter.ForkedBooter.main(ForkedBooter.java:103)
 
-Dec 14, 2015 10:03:05 AM org.mortbay.log.Slf4jLog info
+Dec 14, 2015 11:20:30 AM org.mortbay.log.Slf4jLog info
 INFO: jetty-6.1.26
-Dec 14, 2015 10:03:05 AM org.mortbay.log.Slf4jLog info
+Dec 14, 2015 11:20:30 AM org.mortbay.log.Slf4jLog info
 INFO: NO JSP Support for , did not find org.apache.jasper.servlet.JspServlet
-Dec 14, 2015 10:03:05 AM org.mortbay.log.Slf4jLog info
-INFO: Started SocketConnector@0.0.0.0:49935
-Dec 14, 2015 10:03:05 AM jenkins.InitReactorRunner$1 onAttained
+Dec 14, 2015 11:20:30 AM org.mortbay.log.Slf4jLog info
+INFO: Started SocketConnector@0.0.0.0:53860
+Dec 14, 2015 11:20:30 AM jenkins.InitReactorRunner$1 onAttained
 INFO: Started initialization
-Dec 14, 2015 10:03:05 AM jenkins.InitReactorRunner$1 onAttained
+Dec 14, 2015 11:20:30 AM jenkins.InitReactorRunner$1 onAttained
 INFO: Listed all plugins
-Dec 14, 2015 10:03:05 AM jenkins.InitReactorRunner$1 onAttained
+Dec 14, 2015 11:20:30 AM jenkins.InitReactorRunner$1 onAttained
 INFO: Prepared all plugins
-Dec 14, 2015 10:03:05 AM jenkins.InitReactorRunner$1 onAttained
+Dec 14, 2015 11:20:30 AM jenkins.InitReactorRunner$1 onAttained
 INFO: Started all plugins
-Dec 14, 2015 10:03:05 AM jenkins.InitReactorRunner$1 onAttained
+Dec 14, 2015 11:20:30 AM jenkins.InitReactorRunner$1 onAttained
 INFO: Augmented all extensions
-Dec 14, 2015 10:03:05 AM jenkins.InitReactorRunner$1 onAttained
+Dec 14, 2015 11:20:30 AM jenkins.InitReactorRunner$1 onAttained
 INFO: Loaded all jobs
-Dec 14, 2015 10:03:07 AM jenkins.InitReactorRunner$1 onAttained
+Dec 14, 2015 11:20:31 AM jenkins.InitReactorRunner$1 onAttained
 INFO: Completed initialization
-Dec 14, 2015 10:03:07 AM hudson.UDPBroadcastThread run
+Dec 14, 2015 11:20:31 AM hudson.UDPBroadcastThread run
 WARNING: UDP handling problem
 java.net.SocketException: Can't assign requested address
 	at java.net.PlainDatagramSocketImpl.join(Native Method)
@@ -86,5 +86,5 @@ java.net.SocketException: Can't assign requested address
 	at hudson.UDPBroadcastThread.run(UDPBroadcastThread.java:76)
 
 === Starting CliSanityTest.testCliSanity
-Dec 14, 2015 10:03:07 AM org.mortbay.log.Slf4jLog info
-INFO: Stopped SocketConnector@0.0.0.0:49935
+Dec 14, 2015 11:20:31 AM org.mortbay.log.Slf4jLog info
+INFO: Stopped SocketConnector@0.0.0.0:53860
