@@ -16,6 +16,7 @@ import hudson.model.Project;
 import hudson.model.StringParameterValue;
 import hudson.triggers.Trigger;
 import hudson.triggers.TriggerDescriptor;
+import hudson.util.FormValidation;
 import hudson.util.StreamTaskListener;
 
 import java.io.File;
@@ -27,7 +28,10 @@ import java.util.Collections;
 import java.util.HashMap;
 import java.util.List;
 
+import javax.servlet.ServletException;
+
 import jenkins.model.Jenkins;
+import net.sf.json.JSONObject;
 
 import org.apache.commons.jelly.XMLOutput;
 import org.eclipse.egit.github.core.Comment;
@@ -41,6 +45,8 @@ import org.eclipse.egit.github.core.service.IssueService;
 import org.eclipse.egit.github.core.service.PullRequestService;
 import org.eclipse.egit.github.core.service.RepositoryService;
 import org.kohsuke.stapler.DataBoundConstructor;
+import org.kohsuke.stapler.QueryParameter;
+import org.kohsuke.stapler.StaplerRequest;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -138,7 +144,7 @@ public class PullRequestTrigger extends Trigger<AbstractProject<?, ?>> {
           logger.println("Polling for " + config.getGitHubRepository());
 
           logger.println("Instantiating Clients");
-          GitHubClient githubClient = new GitHubClient("github.roving.com");
+          GitHubClient githubClient = new GitHubClient(getDescriptor().getGithubUrl());
           githubClient.setCredentials(config.getSystemUser(), config.getSystemUserPassword());
 
           RepositoryService repositoryService = new RepositoryService(githubClient);
@@ -225,6 +231,7 @@ public class PullRequestTrigger extends Trigger<AbstractProject<?, ?>> {
         stringParams.add(new StringParameterValue("repositoryName", localConfig.getRepositoryName()));
         stringParams.add(new StringParameterValue("repositoryOwner", localConfig.getRepositoryOwner()));
         stringParams.add(new StringParameterValue("gitHubRepository", localConfig.getGitHubRepository()));
+        stringParams.add(new StringParameterValue("localGithubUrl", getDescriptor().getGithubUrl()));
         stringParams
             .add(new StringParameterValue("gitHubHeadRepository", pullRequest.getHead().getRepo().getCloneUrl()));
         stringParams.add(new StringParameterValue("sha", sha));
@@ -346,6 +353,8 @@ public class PullRequestTrigger extends Trigger<AbstractProject<?, ?>> {
 
   @Extension
   public static final class DescriptorImpl extends TriggerDescriptor {
+    
+    public String githubUrl;
 
     /**
      * {@inheritDoc}
@@ -362,6 +371,33 @@ public class PullRequestTrigger extends Trigger<AbstractProject<?, ?>> {
     public String getDisplayName() {
       return "Github Pull Request Poller";
     }
+    
+    @Override
+    public boolean configure(StaplerRequest req, JSONObject formData) throws FormException {
+      githubUrl = formData.getString("githubUrl");
+      save();
+      return super.configure(req, formData);
+    }
+    
+    public FormValidation doCheckGithubUrl(@QueryParameter String githubUrl) throws IOException, ServletException {
+      if(githubUrl.length() == 0 || githubUrl.length() < 4 ){
+        return FormValidation.error("Please enter a valid github domain (e.g. github.com)");
+      }
+      
+      if(githubUrl.contains("http://")){        
+        this.githubUrl = githubUrl.replaceFirst("http://", "");
+      }
+      
+      if(githubUrl.contains("https://")){
+        this.githubUrl = githubUrl.replaceFirst("https://", "");
+      }
+      return FormValidation.ok();
+    }
+    
+    public String getGithubUrl(){
+      return this.githubUrl;
+    }
+       
 
   }
 
