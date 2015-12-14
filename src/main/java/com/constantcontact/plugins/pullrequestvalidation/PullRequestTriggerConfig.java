@@ -118,23 +118,23 @@ public final class PullRequestTriggerConfig implements Describable<PullRequestTr
         throws IOException, InterruptedException {
       
       if(repositoryName.length() < 1){
-        FormValidation.error("Please enter a valid repository name");
+        FormValidation.error(Messages.config_form_validation_1());
       }
       
       if(systemUser.length() < 1){
-        FormValidation.error("Please enter a valid system username");
+        FormValidation.error(Messages.config_form_validation_2());
       }
       
       if(systemUserPassword.length() < 1){
-        FormValidation.error("Please enter a valid system useer password");
+        FormValidation.error(Messages.config_form_validation_3());
       }
       
       if(repositoryOwner.length() < 1){
-        FormValidation.error("Please enter a valid repository owner");
+        FormValidation.error(Messages.config_form_validation_4());
       }
       
       if(gitHubRepository.length() < 1){
-        FormValidation.error("Please enter a valid repository");
+        FormValidation.error(Messages.config_form_validation_5());
       }
 
       return FormValidation.ok();
