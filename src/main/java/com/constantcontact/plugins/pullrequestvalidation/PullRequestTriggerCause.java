@@ -12,15 +12,13 @@ import com.thoughtworks.xstream.mapper.Mapper;
 public final class PullRequestTriggerCause extends Cause {
 
   private final String repositoryName;
-  private final String systemUser;
-  private final String systemUserPassword;
+  private final String credentialsId;
   private final String repositoryOwner;
   private final String gitHubRepository;
 
   public PullRequestTriggerCause(PullRequestTriggerConfig config) {
     this.repositoryName = config.getRepositoryName();
-    this.systemUser = config.getSystemUser();
-    this.systemUserPassword = config.getSystemUserPassword();
+    this.credentialsId = config.getCredentialsId();
     this.repositoryOwner = config.getRepositoryOwner();
     this.gitHubRepository = config.getGitHubRepository();
   }
@@ -36,18 +34,13 @@ public final class PullRequestTriggerCause extends Cause {
   }
 
   @Exported(visibility = 3)
-  public String getSystemUser() {
-    return systemUser;
-  }
-
-  @Exported(visibility = 3)
-  public String getSystemUserPassword() {
-    return systemUserPassword;
-  }
-
-  @Exported(visibility = 3)
   public String getRepositoryOwner() {
     return repositoryOwner;
+  }
+  
+  @Exported(visibility = 3)
+  public String getCredentialsId() {
+    return credentialsId;
   }
 
   @Exported(visibility = 3)
@@ -57,7 +50,7 @@ public final class PullRequestTriggerCause extends Cause {
   
   @Override
   public int hashCode() {
-    return Objects.hashCode(repositoryName, systemUser, systemUserPassword, repositoryOwner, gitHubRepository);
+    return Objects.hashCode(repositoryName, credentialsId, repositoryOwner, gitHubRepository);
   }
   
   @Override
@@ -65,8 +58,8 @@ public final class PullRequestTriggerCause extends Cause {
     if (obj instanceof PullRequestTriggerCause) {
       PullRequestTriggerCause other = (PullRequestTriggerCause) obj;
       return Objects.equal(repositoryName, other.repositoryName)
-          && systemUser.equals(other.systemUser) && systemUserPassword.equals(other.systemUserPassword)
-          && systemUserPassword.equals(other.systemUserPassword) && gitHubRepository.equals(other.gitHubRepository);
+          && credentialsId.equals(other.credentialsId) 
+          && repositoryOwner.equals(other.repositoryOwner) && gitHubRepository.equals(other.gitHubRepository);
     }
     return false;
   }
@@ -74,7 +67,7 @@ public final class PullRequestTriggerCause extends Cause {
   @Override
   public String toString() {
     return Objects.toStringHelper(this).add("repositoryName", repositoryName)
-        .add("systemUser", systemUser).add("systemUserPassword", systemUserPassword)
+        .add("credentialsId", credentialsId)
         .add("repositoryOwner", repositoryOwner).add("gitHubRepository", gitHubRepository).toString();
   }
 
@@ -91,5 +84,7 @@ public final class PullRequestTriggerCause extends Cause {
       super(mapper, new PureJavaReflectionProvider());
     }
   }
+
+
 
 }

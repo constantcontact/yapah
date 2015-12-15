@@ -1,18 +1,37 @@
 package com.constantcontact.plugins.pullrequestvalidation;
 
-import antlr.ANTLRException;
-import com.google.common.base.Charsets;
-import com.google.common.collect.ImmutableList;
+import static hudson.Util.fixNull;
 import hudson.Extension;
 import hudson.Util;
 import hudson.console.AnnotatedLargeText;
-import hudson.model.*;
+import hudson.model.Action;
+import hudson.model.BuildableItem;
+import hudson.model.Item;
+import hudson.model.ParameterValue;
+import hudson.model.AbstractProject;
+import hudson.model.Job;
+import hudson.model.ParametersAction;
+import hudson.model.PasswordParameterValue;
+import hudson.model.Project;
+import hudson.model.StringParameterValue;
 import hudson.triggers.Trigger;
 import hudson.triggers.TriggerDescriptor;
 import hudson.util.FormValidation;
 import hudson.util.StreamTaskListener;
+
+import java.io.File;
+import java.io.IOException;
+import java.util.ArrayList;
+import java.util.Collection;
+import java.util.Collections;
+import java.util.HashMap;
+import java.util.List;
+
+import javax.servlet.ServletException;
+
 import jenkins.model.Jenkins;
 import net.sf.json.JSONObject;
+
 import org.apache.commons.jelly.XMLOutput;
 import org.eclipse.egit.github.core.Comment;
 import org.eclipse.egit.github.core.CommitStatus;
@@ -29,20 +48,19 @@ import org.kohsuke.stapler.StaplerRequest;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-import javax.servlet.ServletException;
-import java.io.File;
-import java.io.IOException;
-import java.util.*;
+import antlr.ANTLRException;
 
-import static hudson.Util.fixNull;
+import com.cloudbees.plugins.credentials.common.StandardCredentials;
+import com.cloudbees.plugins.credentials.common.StandardUsernamePasswordCredentials;
+import com.google.common.base.Charsets;
+import com.google.common.collect.ImmutableList;
 
 public class PullRequestTrigger extends Trigger<AbstractProject<?, ?>> {
 
   private static final Logger LOGGER = LoggerFactory.getLogger(PullRequestTrigger.class);
   private static final String PR_VALIDATOR = "~PR_VALIDATOR";
   private final String                              repositoryName;
-  private final String                              systemUser;
-  private final String                              systemUserPassword;
+  private final String                              credentialsId;
   private final String                              repositoryOwner;
   private final String                              gitHubRepository;
   private final ArrayList<PullRequestTriggerConfig> additionalConfigs;
@@ -60,15 +78,14 @@ public class PullRequestTrigger extends Trigger<AbstractProject<?, ?>> {
     PullRequestTriggerConfig firstConfig;
 
     if (configsCopy.isEmpty()) {
-      firstConfig = new PullRequestTriggerConfig("", null, null, null, null, null, null);
+      firstConfig = new PullRequestTriggerConfig("", null, null, null, null, null);
     } else {
       firstConfig = configsCopy.remove(0);
     }
 
     this.repositoryName = firstConfig.getRepositoryName();
     this.repositoryOwner = firstConfig.getRepositoryOwner();
-    this.systemUser = firstConfig.getSystemUser();
-    this.systemUserPassword = firstConfig.getSystemUserPassword();
+    this.credentialsId = firstConfig.getCredentialsId();
     this.gitHubRepository = firstConfig.getGitHubRepository();
 
     this.additionalConfigs = configsCopy;
@@ -80,8 +97,7 @@ public class PullRequestTrigger extends Trigger<AbstractProject<?, ?>> {
   private PullRequestTrigger() {
     this.repositoryName = null;
     this.repositoryOwner = "";
-    this.systemUser = "";
-    this.systemUserPassword = "";
+    this.credentialsId = "";
     this.gitHubRepository = "";
     this.additionalConfigs = null;
   }
@@ -93,7 +109,7 @@ public class PullRequestTrigger extends Trigger<AbstractProject<?, ?>> {
   public List<PullRequestTriggerConfig> getConfigs() {
     ImmutableList.Builder<PullRequestTriggerConfig> builder = ImmutableList
         .builder();
-    builder.add(new PullRequestTriggerConfig(systemUser, systemUserPassword, repositoryName, repositoryOwner,
+    builder.add(new PullRequestTriggerConfig(credentialsId, repositoryName, repositoryOwner,
         gitHubRepository, sha, pullRequestUrl));
     if (additionalConfigs != null) {
       builder.addAll(additionalConfigs);
@@ -131,10 +147,13 @@ public class PullRequestTrigger extends Trigger<AbstractProject<?, ?>> {
         try {
           this.sha = null;
           this.pullRequestUrl = null;
-
+          
+          StandardCredentials credentials = CredentialHelper.lookupCredentials(null, config.getCredentialsId(), config.getGitHubRepository(), listener.getLogger());
+          StandardUsernamePasswordCredentials upCredentials = (StandardUsernamePasswordCredentials) credentials;
+          
           GitHubBizLogic githubWorker = initialize(logger);
           List<PullRequest> pullRequests = githubWorker
-                  .doPreSetup(config.getSystemUser(), config.getSystemUserPassword(), config.getRepositoryOwner(), config
+                  .doPreSetup(upCredentials.getUsername(), upCredentials.getPassword().getPlainText(), config.getRepositoryOwner(), config
                           .getRepositoryName(), config.getGitHubRepository(), getDescriptor().getGithubUrl());
 
           if (pullRequests.size() == 0) {
@@ -186,8 +205,7 @@ public class PullRequestTrigger extends Trigger<AbstractProject<?, ?>> {
         createCommentAndCommitStatus(issueService, commitService, repository, pullRequest);
         PullRequestTriggerConfig expandedConfig = localConfig;
         List<ParameterValue> stringParams = new ArrayList<ParameterValue>();
-        stringParams.add(new StringParameterValue("systemUser", localConfig.getSystemUser()));
-        stringParams.add(new PasswordParameterValue("systemUserPassword", localConfig.getSystemUserPassword()));
+        stringParams.add(new PasswordParameterValue("credentialsId", localConfig.getCredentialsId()));
         stringParams.add(new StringParameterValue("repositoryName", localConfig.getRepositoryName()));
         stringParams.add(new StringParameterValue("repositoryOwner", localConfig.getRepositoryOwner()));
         stringParams.add(new StringParameterValue("gitHubRepository", localConfig.getGitHubRepository()));
@@ -281,12 +299,8 @@ public class PullRequestTrigger extends Trigger<AbstractProject<?, ?>> {
     return repositoryName;
   }
 
-  public String getSystemUser() {
-    return systemUser;
-  }
-
-  public String getSystemUserPassword() {
-    return systemUserPassword;
+  public String getCredentialsId() {
+    return credentialsId;
   }
 
   public String getRepositoryOwner() {
