@@ -118,23 +118,23 @@ public final class PullRequestTriggerConfig implements Describable<PullRequestTr
         throws IOException, InterruptedException {
       
       if(repositoryName.length() < 1){
-        FormValidation.error(Messages.config_form_validation_1());
+        return FormValidation.error(Messages.config_form_validation_1());
       }
       
       if(systemUser.length() < 1){
-        FormValidation.error(Messages.config_form_validation_2());
+        return FormValidation.error(Messages.config_form_validation_2());
       }
       
       if(systemUserPassword.length() < 1){
-        FormValidation.error(Messages.config_form_validation_3());
+        return FormValidation.error(Messages.config_form_validation_3());
       }
       
       if(repositoryOwner.length() < 1){
-        FormValidation.error(Messages.config_form_validation_4());
+        return FormValidation.error(Messages.config_form_validation_4());
       }
       
       if(gitHubRepository.length() < 1){
-        FormValidation.error(Messages.config_form_validation_5());
+        return FormValidation.error(Messages.config_form_validation_5());
       }
 
       return FormValidation.ok();

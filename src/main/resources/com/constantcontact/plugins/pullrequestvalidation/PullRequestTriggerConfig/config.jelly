@@ -12,10 +12,10 @@
   <f:entry title="${%Repository Name}" field="repositoryName">
     <f:textbox value="${it.repositoryName}"/>
   </f:entry>
-  <f:entry title="${%Systen User}" field="systemUser">
+  <f:entry title="${%System User}" field="systemUser">
     <f:textbox value="${it.systemUser}"/>
   </f:entry>
-   <f:entry title="${%Systen User Password}" field="systemUserPassword">
+   <f:entry title="${%System User Password}" field="systemUserPassword">
     <f:password value="${it.systemUserPassword}"/>
   </f:entry>
  
