@@ -41,5 +41,10 @@ This Jenkins plugin builds pull requests from Github and comments on the pull re
 13. Click Test Connection to validate that everything is setup correctly.
 14. Add a Post build Action and select YAPah Github API Pull Request Validator
 
-![alt tag](https://github.roving.com/rdavis/pull-request-validation-plugin/master/flow-diagram.png)
+### Flow Diagram
+![alt tag](flow-diagram.png)
+
+### Example Configuration
+![alt tag](config-example.png)
+
 
