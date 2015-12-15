@@ -6,6 +6,7 @@ import hudson.Util;
 import hudson.console.AnnotatedLargeText;
 import hudson.model.Action;
 import hudson.model.BuildableItem;
+import hudson.model.Hudson;
 import hudson.model.Item;
 import hudson.model.ParameterValue;
 import hudson.model.AbstractProject;
@@ -52,6 +53,7 @@ import antlr.ANTLRException;
 
 import com.cloudbees.plugins.credentials.common.StandardCredentials;
 import com.cloudbees.plugins.credentials.common.StandardUsernamePasswordCredentials;
+import com.constantcontact.plugins.pullrequestvalidation.PullRequestTriggerConfig.DescriptorImpl;
 import com.google.common.base.Charsets;
 import com.google.common.collect.ImmutableList;
 
@@ -295,6 +297,11 @@ public class PullRequestTrigger extends Trigger<AbstractProject<?, ?>> {
     return file;
   }
 
+  public static DescriptorImpl getClassDescriptor() {
+    return (DescriptorImpl) Hudson.getInstance().getDescriptorOrDie(
+        PullRequestTrigger.class);
+  }
+  
   @Override
   public DescriptorImpl getDescriptor() {
     return (DescriptorImpl) super.getDescriptor();
