@@ -28,7 +28,7 @@ public class PullRequestTriggerTest {
   @Test
   public void testAbilityToAddTrigger() throws Exception {
     FreeStyleProject project = jenkinsRule.createFreeStyleProject("BUILD-Test-Repo1");
-    PullRequestTriggerConfig config = new PullRequestTriggerConfig("systemUser1", "systemPassword1", "repositoryName1", "repositoryOwner1", "gitHubRepository1", "sha1", "pullRequestUrl1");
+    PullRequestTriggerConfig config = new PullRequestTriggerConfig("systemUser1", "repositoryName1", "repositoryOwner1", "gitHubRepository1", "sha1", "pullRequestUrl1");
     List<PullRequestTriggerConfig> configs = new ArrayList<PullRequestTriggerConfig>();
     configs.add(config);
     
@@ -40,8 +40,7 @@ public class PullRequestTriggerTest {
     Map<TriggerDescriptor, Trigger<?>> testTriggers = project.getTriggers();
     for(Entry<?, ?> entry : testTriggers.entrySet()){
       PullRequestTrigger localTrigger = (PullRequestTrigger) entry.getValue();
-      Assert.assertEquals(true, localTrigger.getSystemUser().contains("systemUser1"));
-      Assert.assertEquals(true, localTrigger.getSystemUserPassword().contains(""));
+      Assert.assertEquals(true, localTrigger.getCredentialsId().contains("systemUser1"));
       Assert.assertEquals(true, localTrigger.getRepositoryName().contains("repositoryName1"));
       Assert.assertEquals(true, localTrigger.getRepositoryOwner().contains("repositoryOwner1"));
       Assert.assertEquals(true, localTrigger.getGitHubRepository().contains("gitHubRepository1"));

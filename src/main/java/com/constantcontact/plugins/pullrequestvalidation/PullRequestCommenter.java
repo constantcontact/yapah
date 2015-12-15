@@ -29,6 +29,9 @@ import org.eclipse.egit.github.core.service.RepositoryService;
 import org.kohsuke.stapler.DataBoundConstructor;
 import org.kohsuke.stapler.StaplerRequest;
 
+import com.cloudbees.plugins.credentials.common.StandardCredentials;
+import com.cloudbees.plugins.credentials.common.StandardUsernamePasswordCredentials;
+
 public class PullRequestCommenter extends Publisher implements SimpleBuildStep {
 
   @SuppressWarnings("deprecation")
@@ -44,14 +47,13 @@ public class PullRequestCommenter extends Publisher implements SimpleBuildStep {
       TaskListener listener) throws InterruptedException, IOException {
 
     final String sha = run.getEnvironment(listener).get("sha");
-    final String systemUser = run.getEnvironment(listener).get("systemUser");
-    final String systemUserPassword = run.getEnvironment(listener).get("systemUserPassword");
+    final String credentialsId = run.getEnvironment(listener).get("credentialsId");
     final String repositoryName = run.getEnvironment(listener).get("repositoryName");
     final String repositoryOwner = run.getEnvironment(listener).get("repositoryOwner");
     final String pullRequestNumber = run.getEnvironment(listener).get("pullRequestNumber");
-    final String localGithubUrl = run.getEnvironment(listener).get("localGithubUrl");
+    final String localGithubUrl = run.getEnvironment(listener).get("localGithubUrl");   
 
-    List<String> nullValidationForPostBuild = Arrays.asList(new String[] { sha, systemUser, systemUserPassword, repositoryName, repositoryOwner,
+    List<String> nullValidationForPostBuild = Arrays.asList(new String[] { sha, credentialsId, repositoryName, repositoryOwner,
         pullRequestNumber, localGithubUrl });
     
     if(nullValidationForPostBuild.contains("") || nullValidationForPostBuild.contains(null)){
@@ -59,8 +61,11 @@ public class PullRequestCommenter extends Publisher implements SimpleBuildStep {
       return;
     }
 
+    StandardCredentials credentials = CredentialHelper.lookupCredentials(null, credentialsId, localGithubUrl, listener.getLogger());
+    StandardUsernamePasswordCredentials upCredentials = (StandardUsernamePasswordCredentials) credentials;
+    
     GitHubClient githubClient = new GitHubClient(localGithubUrl);
-    githubClient.setCredentials(systemUser, systemUserPassword);
+    githubClient.setCredentials(upCredentials.getUsername(), upCredentials.getPassword().getPlainText());
 
     RepositoryService repositoryService = new RepositoryService(githubClient);
     Repository repository = repositoryService.getRepository(repositoryOwner, repositoryName);
@@ -101,6 +106,7 @@ public class PullRequestCommenter extends Publisher implements SimpleBuildStep {
     sb.append(Messages.commenter_pooling_comment_1());
     sb.append(Jenkins.getInstance().getRootUrl());
     sb.append(Messages.commenter_pooling_comment_2());
+    sb.append(PR_VALIDATOR);
     sb.append(Messages.commenter_pooling_comment_3());
     sb.append(Messages.commenter_pooling_comment_4());
     sb.append(run.getAbsoluteUrl());
