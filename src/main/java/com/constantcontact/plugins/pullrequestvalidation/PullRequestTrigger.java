@@ -1,44 +1,23 @@
 package com.constantcontact.plugins.pullrequestvalidation;
 
-import static hudson.Util.fixNull;
+import antlr.ANTLRException;
+import com.google.common.base.Charsets;
+import com.google.common.collect.ImmutableList;
 import hudson.Extension;
 import hudson.Util;
 import hudson.console.AnnotatedLargeText;
-import hudson.model.Action;
-import hudson.model.BuildableItem;
-import hudson.model.Item;
-import hudson.model.ParameterValue;
-import hudson.model.AbstractProject;
-import hudson.model.Job;
-import hudson.model.ParametersAction;
-import hudson.model.PasswordParameterValue;
-import hudson.model.Project;
-import hudson.model.StringParameterValue;
+import hudson.model.*;
 import hudson.triggers.Trigger;
 import hudson.triggers.TriggerDescriptor;
 import hudson.util.FormValidation;
 import hudson.util.StreamTaskListener;
-
-import java.io.File;
-import java.io.IOException;
-import java.io.PrintStream;
-import java.util.ArrayList;
-import java.util.Collection;
-import java.util.Collections;
-import java.util.HashMap;
-import java.util.List;
-
-import javax.servlet.ServletException;
-
 import jenkins.model.Jenkins;
 import net.sf.json.JSONObject;
-
 import org.apache.commons.jelly.XMLOutput;
 import org.eclipse.egit.github.core.Comment;
 import org.eclipse.egit.github.core.CommitStatus;
 import org.eclipse.egit.github.core.PullRequest;
 import org.eclipse.egit.github.core.Repository;
-import org.eclipse.egit.github.core.RepositoryCommit;
 import org.eclipse.egit.github.core.client.GitHubClient;
 import org.eclipse.egit.github.core.service.CommitService;
 import org.eclipse.egit.github.core.service.IssueService;
@@ -50,27 +29,26 @@ import org.kohsuke.stapler.StaplerRequest;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-import antlr.ANTLRException;
+import javax.servlet.ServletException;
+import java.io.File;
+import java.io.IOException;
+import java.util.*;
 
-import com.google.common.base.Charsets;
-import com.google.common.collect.ImmutableList;
+import static hudson.Util.fixNull;
 
 public class PullRequestTrigger extends Trigger<AbstractProject<?, ?>> {
 
+  private static final Logger LOGGER = LoggerFactory.getLogger(PullRequestTrigger.class);
+  private static final String PR_VALIDATOR = "~PR_VALIDATOR";
   private final String                              repositoryName;
   private final String                              systemUser;
   private final String                              systemUserPassword;
   private final String                              repositoryOwner;
   private final String                              gitHubRepository;
-  private String                                    sha;
-  private String                                    pullRequestUrl;
-
-  private boolean                                   isSupposedToRun = false;
-
-  private static final Logger                       LOGGER          = LoggerFactory.getLogger(PullRequestTrigger.class);
-  private static final String                       PR_VALIDATOR    = "~PR_VALIDATOR";
-
   private final ArrayList<PullRequestTriggerConfig> additionalConfigs;
+  private String sha;
+  private String pullRequestUrl;
+  private boolean isSupposedToRun = false;
 
   @DataBoundConstructor
   public PullRequestTrigger(String spec, List<PullRequestTriggerConfig> configs) throws ANTLRException {
@@ -108,6 +86,10 @@ public class PullRequestTrigger extends Trigger<AbstractProject<?, ?>> {
     this.additionalConfigs = null;
   }
 
+  public static DescriptorImpl get() {
+    return Trigger.all().get(DescriptorImpl.class);
+  }
+
   public List<PullRequestTriggerConfig> getConfigs() {
     ImmutableList.Builder<PullRequestTriggerConfig> builder = ImmutableList
         .builder();
@@ -126,13 +108,22 @@ public class PullRequestTrigger extends Trigger<AbstractProject<?, ?>> {
     return sb.toString();
   }
 
+  private GitHubBizLogic initialize(LogWriter logger) throws IOException {
+    GitHubClient githubClient = new GitHubClient(getDescriptor().getGithubUrl());
+    RepositoryService repositoryService = new RepositoryService(githubClient);
+    PullRequestService pullRequestService = new PullRequestService(githubClient);
+    CommitService commitService = new CommitService(githubClient);
+    IssueService issueService = new IssueService(githubClient);
+    return new GitHubBizLogic(logger, githubClient, repositoryService, pullRequestService, commitService, issueService);
+  }
+
   @Override
   public void run() {
     StreamTaskListener listener;
     try {
       listener = new StreamTaskListener(getLogFile());
 
-      PrintStream logger = listener.getLogger();
+      LogWriter logger = new LogWriter(listener.getLogger());
       for (PullRequestTriggerConfig config : getConfigs()) {
         if (null == config.getGitHubRepository()) {
           return;
@@ -141,66 +132,35 @@ public class PullRequestTrigger extends Trigger<AbstractProject<?, ?>> {
           this.sha = null;
           this.pullRequestUrl = null;
 
-          logger.println(Messages.trigger_logging_1() + config.getGitHubRepository());
-
-          logger.println(Messages.trigger_logging_2() + getDescriptor().getGithubUrl());
-          GitHubClient githubClient = new GitHubClient(getDescriptor().getGithubUrl());
-          githubClient.setCredentials(config.getSystemUser(), config.getSystemUserPassword());
-
-          RepositoryService repositoryService = new RepositoryService(githubClient);
-          Repository repository = repositoryService
-              .getRepository(config.getRepositoryOwner(), config.getRepositoryName());
-
-          PullRequestService pullRequestService = new PullRequestService(githubClient);
-          logger.println(Messages.trigger_logging_3() + config.getGitHubRepository());
-
-          List<PullRequest> pullRequests = pullRequestService.getPullRequests(repository, "open");
-          CommitService commitService = new CommitService(githubClient);
-          IssueService issueService = new IssueService(githubClient);
+          GitHubBizLogic githubWorker = initialize(logger);
+          List<PullRequest> pullRequests = githubWorker
+                  .doPreSetup(config.getSystemUser(), config.getSystemUserPassword(), config.getRepositoryOwner(), config
+                          .getRepositoryName(), config.getGitHubRepository(), getDescriptor().getGithubUrl());
 
           if (pullRequests.size() == 0) {
-            logger.println(Messages.trigger_logging_4() + config.getGitHubRepository());
+            githubWorker.logZeroPR(config.getGitHubRepository());
             continue;
           }
 
           for (PullRequest pullRequest : pullRequests) {
             this.sha = pullRequest.getHead().getSha();
-            logger.println(Messages.trigger_logging_5() + this.sha);
+            githubWorker.logSHA(this.sha);
 
             this.pullRequestUrl = pullRequest.getUrl();
-            logger.println(Messages.trigger_logging_6() + this.pullRequestUrl);
+            githubWorker.logPRURL(this.pullRequestUrl);
 
-            List<Comment> comments = issueService.getComments(config.getRepositoryOwner(), config.getRepositoryName(),
-                pullRequest.getNumber());
-
-            HashMap<Long, Comment> commentHash = new HashMap<Long, Comment>();
-            for (Comment comment : comments) {
-              if (comment.getBody().contains(PR_VALIDATOR)) {
-                commentHash.put(comment.getId(), comment);
-              }
-            }
+            HashMap<Long, Comment> commentHash =
+                    githubWorker.captureComments(config.getRepositoryOwner(), config.getRepositoryName(), pullRequest, PR_VALIDATOR);
 
             if (commentHash.size() == 0) {
-              logger.println(Messages.trigger_logging_7());
-              isSupposedToRun = true;
-              doRun(pullRequest, logger, issueService, commitService, repository, config);
+              isSupposedToRun = githubWorker.doZeroCommentsWork(isSupposedToRun);
+              doRun(pullRequest, logger, githubWorker.getIssueService(), githubWorker.getCommitService(), githubWorker
+                      .getRepository(), config);
 
             } else {
-              Long mostRecentCommentId = Collections.max(commentHash.keySet());
-
-              Comment mostRecentComment = commentHash.get(mostRecentCommentId);
-              List<RepositoryCommit> commits = commitService.getCommits(repository, sha, null);
-              if (mostRecentComment.getBody().contains(PR_VALIDATOR)) {
-                for (RepositoryCommit commit : commits) {
-                  if (commit.getCommit().getAuthor().getDate().after(mostRecentComment.getCreatedAt())) {
-                    isSupposedToRun = true;
-                  }
-                }
-              }
-              if (!isSupposedToRun) {
-                logger.println(Messages.trigger_logging_8());
-              }
-              doRun(pullRequest, logger, issueService, commitService, repository, config);
+              isSupposedToRun = githubWorker.doNonZeroCommentsWork(isSupposedToRun, commentHash, this.sha, PR_VALIDATOR);
+              doRun(pullRequest, logger, githubWorker.getIssueService(), githubWorker.getCommitService(), githubWorker
+                      .getRepository(), config);
             }
 
           }
@@ -216,13 +176,13 @@ public class PullRequestTrigger extends Trigger<AbstractProject<?, ?>> {
     }
   }
 
-  private void doRun(final PullRequest pullRequest, PrintStream logger, IssueService issueService,
-      CommitService commitService, Repository repository, PullRequestTriggerConfig localConfig) throws Exception {
+  private void doRun(final PullRequest pullRequest, LogWriter logger, IssueService issueService,
+                     CommitService commitService, Repository repository, PullRequestTriggerConfig localConfig) throws Exception {
     try {
 
       if (isSupposedToRun) {
-        logger.println(Messages.trigger_logging_10());
-        logger.println(Messages.trigger_logging_11());
+        logger.log(Messages.trigger_logging_10());
+        logger.log(Messages.trigger_logging_11());
         createCommentAndCommitStatus(issueService, commitService, repository, pullRequest);
         PullRequestTriggerConfig expandedConfig = localConfig;
         List<ParameterValue> stringParams = new ArrayList<ParameterValue>();
@@ -301,36 +261,6 @@ public class PullRequestTrigger extends Trigger<AbstractProject<?, ?>> {
     return Collections.singleton(new PullRequestPollingAction());
   }
 
-  /**
-   * Action object for {@link Project}. Used to display the polling log.
-   */
-  public final class PullRequestPollingAction implements Action {
-    public Job<?, ?> getOwner() {
-      return job;
-    }
-
-    public String getIconFileName() {
-      return "clipboard.png";
-    }
-
-    public String getDisplayName() {
-      return Messages.trigger_log_displayname();
-    }
-
-    public String getUrlName() {
-      return "PRValidatorPollLog";
-    }
-
-    public String getLog() throws IOException {
-      return Util.loadFile(getLogFile());
-    }
-
-    public void writeLogTo(XMLOutput out) throws IOException {
-      new AnnotatedLargeText<PullRequestPollingAction>(getLogFile(), Charsets.UTF_8, true, this)
-          .writeHtmlTo(0, out.asWriter());
-    }
-  }
-
   public File getLogFile() throws IOException {
     File file = new File(job.getRootDir(), "PR-Validator.log");
     if (!file.exists()) {
@@ -347,18 +277,34 @@ public class PullRequestTrigger extends Trigger<AbstractProject<?, ?>> {
     return (DescriptorImpl) super.getDescriptor();
   }
 
-  public static DescriptorImpl get() {
-    return Trigger.all().get(DescriptorImpl.class);
+  public String getRepositoryName() {
+    return repositoryName;
+  }
+
+  public String getSystemUser() {
+    return systemUser;
+  }
+
+  public String getSystemUserPassword() {
+    return systemUserPassword;
+  }
+
+  public String getRepositoryOwner() {
+    return repositoryOwner;
+  }
+
+  public String getGitHubRepository() {
+    return gitHubRepository;
   }
 
   @Extension
   public static final class DescriptorImpl extends TriggerDescriptor {
 
+    public String githubUrl;
+
     public DescriptorImpl() {
       load();
     }
-
-    public String githubUrl;
 
     /**
      * {@inheritDoc}
@@ -404,24 +350,33 @@ public class PullRequestTrigger extends Trigger<AbstractProject<?, ?>> {
 
   }
 
-  public String getRepositoryName() {
-    return repositoryName;
-  }
+  /**
+   * Action object for {@link Project}. Used to display the polling log.
+   */
+  public final class PullRequestPollingAction implements Action {
+    public Job<?, ?> getOwner() {
+      return job;
+    }
 
-  public String getSystemUser() {
-    return systemUser;
-  }
+    public String getIconFileName() {
+      return "clipboard.png";
+    }
 
-  public String getSystemUserPassword() {
-    return systemUserPassword;
-  }
+    public String getDisplayName() {
+      return Messages.trigger_log_displayname();
+    }
 
-  public String getRepositoryOwner() {
-    return repositoryOwner;
-  }
+    public String getUrlName() {
+      return "PRValidatorPollLog";
+    }
 
-  public String getGitHubRepository() {
-    return gitHubRepository;
+    public String getLog() throws IOException {
+      return Util.loadFile(getLogFile());
+    }
+
+    public void writeLogTo(XMLOutput out) throws IOException {
+      new AnnotatedLargeText<PullRequestPollingAction>(getLogFile(), Charsets.UTF_8, true, this).writeHtmlTo(0, out.asWriter());
+    }
   }
 
 }
