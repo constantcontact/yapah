@@ -57,16 +57,16 @@ import com.google.common.collect.ImmutableList;
 
 public class PullRequestTrigger extends Trigger<AbstractProject<?, ?>> {
 
-  private static final Logger LOGGER = LoggerFactory.getLogger(PullRequestTrigger.class);
-  private static final String PR_VALIDATOR = "~PR_VALIDATOR";
+  private static final Logger                       LOGGER          = LoggerFactory.getLogger(PullRequestTrigger.class);
+  private static final String                       PR_VALIDATOR    = "~PR_VALIDATOR";
   private final String                              repositoryName;
   private final String                              credentialsId;
   private final String                              repositoryOwner;
   private final String                              gitHubRepository;
   private final ArrayList<PullRequestTriggerConfig> additionalConfigs;
-  private String sha;
-  private String pullRequestUrl;
-  private boolean isSupposedToRun = false;
+  private String                                    sha;
+  private String                                    pullRequestUrl;
+  private boolean                                   isSupposedToRun = false;
 
   @DataBoundConstructor
   public PullRequestTrigger(String spec, List<PullRequestTriggerConfig> configs) throws ANTLRException {
@@ -147,14 +147,16 @@ public class PullRequestTrigger extends Trigger<AbstractProject<?, ?>> {
         try {
           this.sha = null;
           this.pullRequestUrl = null;
-          
-          StandardCredentials credentials = CredentialHelper.lookupCredentials(null, config.getCredentialsId(), config.getGitHubRepository(), listener.getLogger());
+
+          StandardCredentials credentials = CredentialHelper.lookupCredentials(null, config.getCredentialsId(),
+              config.getGitHubRepository(), listener.getLogger());
           StandardUsernamePasswordCredentials upCredentials = (StandardUsernamePasswordCredentials) credentials;
-          
+
           GitHubBizLogic githubWorker = initialize(logger);
           List<PullRequest> pullRequests = githubWorker
-                  .doPreSetup(upCredentials.getUsername(), upCredentials.getPassword().getPlainText(), config.getRepositoryOwner(), config
-                          .getRepositoryName(), config.getGitHubRepository(), getDescriptor().getGithubUrl());
+              .doPreSetup(upCredentials.getUsername(), upCredentials.getPassword().getPlainText(),
+                  config.getRepositoryOwner(), config
+                      .getRepositoryName(), config.getGitHubRepository(), getDescriptor().getGithubUrl());
 
           if (pullRequests.size() == 0) {
             githubWorker.logZeroPR(config.getGitHubRepository());
@@ -169,17 +171,19 @@ public class PullRequestTrigger extends Trigger<AbstractProject<?, ?>> {
             githubWorker.logPRURL(this.pullRequestUrl);
 
             HashMap<Long, Comment> commentHash =
-                    githubWorker.captureComments(config.getRepositoryOwner(), config.getRepositoryName(), pullRequest, PR_VALIDATOR);
+                githubWorker.captureComments(config.getRepositoryOwner(), config.getRepositoryName(), pullRequest,
+                    PR_VALIDATOR);
 
             if (commentHash.size() == 0) {
               isSupposedToRun = githubWorker.doZeroCommentsWork(isSupposedToRun);
               doRun(pullRequest, logger, githubWorker.getIssueService(), githubWorker.getCommitService(), githubWorker
-                      .getRepository(), config);
+                  .getRepository(), config);
 
             } else {
-              isSupposedToRun = githubWorker.doNonZeroCommentsWork(isSupposedToRun, commentHash, this.sha, PR_VALIDATOR);
+              isSupposedToRun = githubWorker
+                  .doNonZeroCommentsWork(isSupposedToRun, commentHash, this.sha, PR_VALIDATOR);
               doRun(pullRequest, logger, githubWorker.getIssueService(), githubWorker.getCommitService(), githubWorker
-                      .getRepository(), config);
+                  .getRepository(), config);
             }
 
           }
@@ -196,7 +200,7 @@ public class PullRequestTrigger extends Trigger<AbstractProject<?, ?>> {
   }
 
   private void doRun(final PullRequest pullRequest, LogWriter logger, IssueService issueService,
-                     CommitService commitService, Repository repository, PullRequestTriggerConfig localConfig) throws Exception {
+      CommitService commitService, Repository repository, PullRequestTriggerConfig localConfig) throws Exception {
     try {
 
       if (isSupposedToRun) {
@@ -360,7 +364,11 @@ public class PullRequestTrigger extends Trigger<AbstractProject<?, ?>> {
     }
 
     public String getGithubUrl() {
-      return this.githubUrl;
+      if (null == this.githubUrl || this.githubUrl == "") {
+        return "github.com";
+      } else {
+        return this.githubUrl;
+      }
     }
 
   }
@@ -390,7 +398,8 @@ public class PullRequestTrigger extends Trigger<AbstractProject<?, ?>> {
     }
 
     public void writeLogTo(XMLOutput out) throws IOException {
-      new AnnotatedLargeText<PullRequestPollingAction>(getLogFile(), Charsets.UTF_8, true, this).writeHtmlTo(0, out.asWriter());
+      new AnnotatedLargeText<PullRequestPollingAction>(getLogFile(), Charsets.UTF_8, true, this).writeHtmlTo(0,
+          out.asWriter());
     }
   }
 
