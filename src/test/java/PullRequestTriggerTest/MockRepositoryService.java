@@ -1,6 +1,7 @@
 package PullRequestTriggerTest;
 
 import org.eclipse.egit.github.core.Repository;
+import org.eclipse.egit.github.core.User;
 import org.eclipse.egit.github.core.client.GitHubClient;
 import org.eclipse.egit.github.core.service.RepositoryService;
 
@@ -21,7 +22,13 @@ public class MockRepositoryService extends RepositoryService {
     public Repository getRepository(String repoOwner, String repoName) {
         getRepoInfo().add(repoOwner);
         getRepoInfo().add(repoName);
-        return new Repository();
+        Repository repo = new Repository();
+        User user = new User();
+        user.setName("name");
+        user.setLogin("login");
+        repo.setOwner(user);
+        repo.setName("name");
+        return repo;
     }
 
     public ArrayList<String> getRepoInfo() {

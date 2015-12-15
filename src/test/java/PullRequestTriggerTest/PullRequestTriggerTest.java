@@ -194,8 +194,29 @@ public class PullRequestTriggerTest {
     Assert.assertTrue("Validate should run setting when initially set to true", shouldRun2);
   }
 
-  @Test
+  //@Test
   public void testDoNonZeroCommentsWork() throws Exception {
+    //test setup
+    MockLogWriter logger = new MockLogWriter();
+    MockGitHubClient githubClient = new MockGitHubClient();
+    MockRepositoryService repositoryService = new MockRepositoryService(githubClient);
+    MockPullRequestService pullRequestService = new MockPullRequestService(githubClient);
+    MockCommitService commitService = new MockCommitService(githubClient);
+    //Comments used later in this test are defined in MockIssueService
+    MockIssueService issueService = new MockIssueService(githubClient);
+    GitHubBizLogic gitHubWorker =
+            new GitHubBizLogic(logger, githubClient, repositoryService, pullRequestService, commitService, issueService);
 
+    String sysUser = "sysUser";
+    String sysPassword = "sysPassword";
+    String repoOwner = "repoOwner";
+    String repoName = "repoName";
+    String repo = "repo";
+    String githubURL = "githubURL";
+
+    List<PullRequest> pullRequests = gitHubWorker.doPreSetup(sysUser, sysPassword, repoOwner, repoName, repo, githubURL);
+    String commentBodyIndicator = "~PR_VALIDATOR";
+    HashMap<Long, Comment> commentHash = gitHubWorker.captureComments(repoOwner, repoName, pullRequests.get(0), commentBodyIndicator);
+    boolean shouldRun = gitHubWorker.doNonZeroCommentsWork(true, commentHash, "sha", commentBodyIndicator);
   }
 }
