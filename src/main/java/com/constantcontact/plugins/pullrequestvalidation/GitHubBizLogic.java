@@ -26,30 +26,35 @@ public class GitHubBizLogic {
     private LogWriter logWriter;
     private CommitService commitService;
     private IssueService issueService;
-    private PullRequestTriggerConfig config;
     private Repository repository;
 
     public GitHubBizLogic(LogWriter logWriter, GitHubClient githubClient, RepositoryService repositoryService,
-                          PullRequestService pullRequestService, CommitService commitService, IssueService issueService,
-                          PullRequestTriggerConfig config) {
+                          PullRequestService pullRequestService, CommitService commitService, IssueService issueService) {
         this.githubClient = githubClient;
         this.repositoryService = repositoryService;
         this.pullRequestService = pullRequestService;
         this.logWriter = logWriter;
-        this.commitService = commitService;
-        this.issueService = issueService;
-        this.config = config;
+        this.setCommitService(commitService);
+        this.setIssueService(issueService);
     }
 
-    protected void logGitHubRepo(String repo) {
+    private void logGitHubRepo(String repo) {
         logWriter.log(Messages.trigger_logging_1() + repo);
     }
 
-    protected void logGitHubURL(String url) {
+    private void logGitHubURL(String url) {
         logWriter.log(Messages.trigger_logging_2() + url);
     }
 
-    protected List<PullRequest> setup(String systemUser, String systemPassword, String repoOwner, String repoName, String repo)
+    protected List<PullRequest> doPreSetup(String systemUser, String systemPassword, String repoOwner, String repoName, String repo,
+                                           String githubURL) throws IOException {
+        logGitHubRepo(repo);
+        logGitHubURL(githubURL);
+
+        return setup(systemUser, systemPassword, repoOwner, repoName, repo);
+    }
+
+    private List<PullRequest> setup(String systemUser, String systemPassword, String repoOwner, String repoName, String repo)
             throws IOException {
         githubClient.setCredentials(systemUser, systemPassword);
 
@@ -72,8 +77,9 @@ public class GitHubBizLogic {
         logWriter.log(Messages.trigger_logging_6() + url);
     }
 
-    protected HashMap<Long, Comment> captureComments(PullRequest pullRequest, String commentBodyIndicator) throws IOException {
-        List<Comment> comments = issueService.getComments(config.getRepositoryOwner(), config.getRepositoryName(), pullRequest.getNumber());
+    protected HashMap<Long, Comment> captureComments(String repoOwner, String repoName, PullRequest pullRequest,
+                                                     String commentBodyIndicator) throws IOException {
+        List<Comment> comments = getIssueService().getComments(repoOwner, repoName, pullRequest.getNumber());
         HashMap<Long, Comment> commentHash = new HashMap<Long, Comment>();
         for (Comment comment : comments) {
             if (comment.getBody().contains(commentBodyIndicator)) {
@@ -96,7 +102,7 @@ public class GitHubBizLogic {
         Long mostRecentCommentId = Collections.max(commentHash.keySet());
 
         Comment mostRecentComment = commentHash.get(mostRecentCommentId);
-        List<RepositoryCommit> commits = commitService.getCommits(getRepository(), sha, null);
+        List<RepositoryCommit> commits = getCommitService().getCommits(getRepository(), sha, null);
         if (mostRecentComment.getBody().contains(commentBodyIndicator)) {
             for (RepositoryCommit commit : commits) {
                 if (commit.getCommit().getAuthor().getDate().after(mostRecentComment.getCreatedAt())) {
@@ -117,5 +123,21 @@ public class GitHubBizLogic {
 
     protected void setRepository(Repository repository) {
         this.repository = repository;
+    }
+
+    protected CommitService getCommitService() {
+        return commitService;
+    }
+
+    protected void setCommitService(CommitService commitService) {
+        this.commitService = commitService;
+    }
+
+    protected IssueService getIssueService() {
+        return issueService;
+    }
+
+    protected void setIssueService(IssueService issueService) {
+        this.issueService = issueService;
     }
 }

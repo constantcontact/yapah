@@ -108,12 +108,22 @@ public class PullRequestTrigger extends Trigger<AbstractProject<?, ?>> {
     return sb.toString();
   }
 
+  private GitHubBizLogic initialize(LogWriter logger) throws IOException {
+    GitHubClient githubClient = new GitHubClient(getDescriptor().getGithubUrl());
+    RepositoryService repositoryService = new RepositoryService(githubClient);
+    PullRequestService pullRequestService = new PullRequestService(githubClient);
+    CommitService commitService = new CommitService(githubClient);
+    IssueService issueService = new IssueService(githubClient);
+    return new GitHubBizLogic(logger, githubClient, repositoryService, pullRequestService, commitService, issueService);
+  }
+
   @Override
   public void run() {
     StreamTaskListener listener;
     try {
       listener = new StreamTaskListener(getLogFile());
 
+      LogWriter logger = new LogWriter(listener.getLogger());
       for (PullRequestTriggerConfig config : getConfigs()) {
         if (null == config.getGitHubRepository()) {
           return;
@@ -122,23 +132,10 @@ public class PullRequestTrigger extends Trigger<AbstractProject<?, ?>> {
           this.sha = null;
           this.pullRequestUrl = null;
 
-
-          LogWriter logger = new LogWriter(listener.getLogger());
-          GitHubClient githubClient = new GitHubClient(getDescriptor().getGithubUrl());
-          RepositoryService repositoryService = new RepositoryService(githubClient);
-          PullRequestService pullRequestService = new PullRequestService(githubClient);
-          CommitService commitService = new CommitService(githubClient);
-          IssueService issueService = new IssueService(githubClient);
-          GitHubBizLogic githubWorker =
-                  new GitHubBizLogic(logger, githubClient, repositoryService, pullRequestService, commitService, issueService, config);
-
-          githubWorker.logGitHubRepo(config.getGitHubRepository());
-          githubWorker.logGitHubURL(getDescriptor().getGithubUrl());
-
+          GitHubBizLogic githubWorker = initialize(logger);
           List<PullRequest> pullRequests = githubWorker
-                  .setup(config.getSystemUser(), config.getSystemUserPassword(), config.getRepositoryOwner(), config
-                          .getRepositoryName(), config.getGitHubRepository());
-
+                  .doPreSetup(config.getSystemUser(), config.getSystemUserPassword(), config.getRepositoryOwner(), config
+                          .getRepositoryName(), config.getGitHubRepository(), getDescriptor().getGithubUrl());
 
           if (pullRequests.size() == 0) {
             githubWorker.logZeroPR(config.getGitHubRepository());
@@ -152,15 +149,18 @@ public class PullRequestTrigger extends Trigger<AbstractProject<?, ?>> {
             this.pullRequestUrl = pullRequest.getUrl();
             githubWorker.logPRURL(this.pullRequestUrl);
 
-            HashMap<Long, Comment> commentHash = githubWorker.captureComments(pullRequest, PR_VALIDATOR);
+            HashMap<Long, Comment> commentHash =
+                    githubWorker.captureComments(config.getRepositoryOwner(), config.getRepositoryName(), pullRequest, PR_VALIDATOR);
 
             if (commentHash.size() == 0) {
               isSupposedToRun = githubWorker.doZeroCommentsWork(isSupposedToRun);
-              doRun(pullRequest, logger, issueService, commitService, githubWorker.getRepository(), config);
+              doRun(pullRequest, logger, githubWorker.getIssueService(), githubWorker.getCommitService(), githubWorker
+                      .getRepository(), config);
 
             } else {
-              githubWorker.doNonZeroCommentsWork(isSupposedToRun, commentHash, this.sha, PR_VALIDATOR);
-              doRun(pullRequest, logger, issueService, commitService, githubWorker.getRepository(), config);
+              isSupposedToRun = githubWorker.doNonZeroCommentsWork(isSupposedToRun, commentHash, this.sha, PR_VALIDATOR);
+              doRun(pullRequest, logger, githubWorker.getIssueService(), githubWorker.getCommitService(), githubWorker
+                      .getRepository(), config);
             }
 
           }
