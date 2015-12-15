@@ -36,5 +36,16 @@ public class CredentialHelper {
     return (credentialId == null) ? null : CredentialsMatchers.firstOrNull(credentials,
         CredentialsMatchers.withId(credentialId));
   }
+  
+  public static StandardCredentials lookupCredentials(String credentialId, String uri) {
+    List<StandardCredentials> credentials;
+
+    credentials = CredentialsProvider.lookupCredentials(StandardCredentials.class, (Item) null, ACL.SYSTEM,
+        URIRequirementBuilder.fromUri(uri).build());
+
+
+    return (credentialId == null) ? null : CredentialsMatchers.firstOrNull(credentials,
+        CredentialsMatchers.withId(credentialId));
+  }
 
 }
