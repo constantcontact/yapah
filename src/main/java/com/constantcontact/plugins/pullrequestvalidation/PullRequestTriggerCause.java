@@ -25,7 +25,7 @@ public final class PullRequestTriggerCause extends Cause {
   
   @Override
   public String getShortDescription() {
-    return "Pull request was created or modified";        
+    return Messages.cause_short_description();        
   }
 
   @Exported(visibility = 3)
