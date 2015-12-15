@@ -46,8 +46,8 @@ public class GitHubBizLogic {
         logWriter.log(Messages.trigger_logging_2() + url);
     }
 
-    protected List<PullRequest> doPreSetup(String systemUser, String systemPassword, String repoOwner, String repoName, String repo,
-                                           String githubURL) throws IOException {
+    public List<PullRequest> doPreSetup(String systemUser, String systemPassword, String repoOwner, String repoName, String repo,
+                                        String githubURL) throws IOException {
         logGitHubRepo(repo);
         logGitHubURL(githubURL);
 
@@ -65,20 +65,20 @@ public class GitHubBizLogic {
         return pullRequestService.getPullRequests(repository, "open");
     }
 
-    protected void logZeroPR(String repo) {
+    public void logZeroPR(String repo) {
         logWriter.log(Messages.trigger_logging_4() + repo);
     }
 
-    protected void logSHA(String sha) {
+    public void logSHA(String sha) {
         logWriter.log(Messages.trigger_logging_5() + sha);
     }
 
-    protected void logPRURL(String url) {
+    public void logPRURL(String url) {
         logWriter.log(Messages.trigger_logging_6() + url);
     }
 
-    protected HashMap<Long, Comment> captureComments(String repoOwner, String repoName, PullRequest pullRequest,
-                                                     String commentBodyIndicator) throws IOException {
+    public HashMap<Long, Comment> captureComments(String repoOwner, String repoName, PullRequest pullRequest,
+                                                  String commentBodyIndicator) throws IOException {
         List<Comment> comments = getIssueService().getComments(repoOwner, repoName, pullRequest.getNumber());
         HashMap<Long, Comment> commentHash = new HashMap<Long, Comment>();
         for (Comment comment : comments) {
@@ -89,15 +89,15 @@ public class GitHubBizLogic {
         return commentHash;
     }
 
-    protected boolean doZeroCommentsWork(boolean shouldRun) {
+    public boolean doZeroCommentsWork(boolean shouldRun) {
         boolean shouldRunSetting = shouldRun;
         logWriter.log(Messages.trigger_logging_7());
         shouldRunSetting = true;
         return shouldRunSetting;
     }
 
-    protected boolean doNonZeroCommentsWork(boolean shouldRun, HashMap<Long, Comment> commentHash, String sha,
-                                            String commentBodyIndicator) throws IOException {
+    public boolean doNonZeroCommentsWork(boolean shouldRun, HashMap<Long, Comment> commentHash, String sha,
+                                         String commentBodyIndicator) throws IOException {
         boolean shouldRunSetting = shouldRun;
         Long mostRecentCommentId = Collections.max(commentHash.keySet());
 
@@ -117,7 +117,7 @@ public class GitHubBizLogic {
         return shouldRunSetting;
     }
 
-    protected Repository getRepository() {
+    public Repository getRepository() {
         return repository;
     }
 
