@@ -56,9 +56,11 @@ public class PullRequestCommenter extends Publisher implements SimpleBuildStep {
     List<String> nullValidationForPostBuild = Arrays.asList(new String[] { sha, credentialsId, repositoryName, repositoryOwner,
         pullRequestNumber, localGithubUrl });
     
-    if(nullValidationForPostBuild.contains("") || nullValidationForPostBuild.contains(null)){
-      listener.getLogger().println(Messages.commenter_null_validation());
-      return;
+    for(String validationString: nullValidationForPostBuild){
+      listener.getLogger().println(validationString + " " + validationString.length());
+      if(null == validationString || validationString == ""){
+        listener.getLogger().println(Messages.commenter_null_validation());
+      }
     }
 
     StandardCredentials credentials = CredentialHelper.lookupCredentials(null, credentialsId, localGithubUrl, listener.getLogger());
