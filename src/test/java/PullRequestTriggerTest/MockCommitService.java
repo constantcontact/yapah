@@ -10,4 +10,5 @@ public class MockCommitService extends CommitService {
     public MockCommitService(GitHubClient gitHubClient) {
 
     }
+
 }

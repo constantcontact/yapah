@@ -9,22 +9,25 @@ import hudson.tasks.Shell;
 import hudson.triggers.Trigger;
 import hudson.triggers.TriggerDescriptor;
 import org.apache.commons.io.FileUtils;
+import org.eclipse.egit.github.core.Comment;
 import org.eclipse.egit.github.core.PullRequest;
 import org.junit.Assert;
+import org.junit.Rule;
 import org.junit.Test;
 import org.jvnet.hudson.test.JenkinsRule;
 
 import java.util.ArrayList;
+import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.Map.Entry;
 
 public class PullRequestTriggerTest {
 
-  //@Rule
+  @Rule
   public JenkinsRule jenkinsRule = new JenkinsRule();
 
-  //@Test
+  @Test
   public void testAbilityToAddTrigger() throws Exception {
     FreeStyleProject project = jenkinsRule.createFreeStyleProject("BUILD-Test-Repo1");
     PullRequestTriggerConfig config = new PullRequestTriggerConfig("systemUser1", "repositoryName1", "repositoryOwner1", "gitHubRepository1", "sha1", "pullRequestUrl1");
@@ -72,7 +75,7 @@ public class PullRequestTriggerTest {
     String githubURL = "githubURL";
 
     //biz logic method under test
-    List<PullRequest> pullRequests = gitHubWorker.doPreSetup(sysUser, sysPassword, repoOwner, repoName, repo, "githubURL");
+    List<PullRequest> pullRequests = gitHubWorker.doPreSetup(sysUser, sysPassword, repoOwner, repoName, repo, githubURL);
 
     //test validations for pre-setup
     ArrayList<String> logMessages = logger.getLogEntries();
@@ -140,5 +143,59 @@ public class PullRequestTriggerTest {
     String url = "url";
     gitHubWorker.logPRURL(url);
     Assert.assertEquals("Validate sha log entry", "Pull Request URL : " + url, logMessages.get(0));
+  }
+
+  @Test
+  public void testCaptureComments() throws Exception {
+    //test setup
+    MockLogWriter logger = new MockLogWriter();
+    MockGitHubClient githubClient = new MockGitHubClient();
+    MockRepositoryService repositoryService = new MockRepositoryService(githubClient);
+    MockPullRequestService pullRequestService = new MockPullRequestService(githubClient);
+    MockCommitService commitService = new MockCommitService(githubClient);
+    //Comments used later in this test are defined in MockIssueService
+    MockIssueService issueService = new MockIssueService(githubClient);
+    GitHubBizLogic gitHubWorker =
+            new GitHubBizLogic(logger, githubClient, repositoryService, pullRequestService, commitService, issueService);
+
+    String sysUser = "sysUser";
+    String sysPassword = "sysPassword";
+    String repoOwner = "repoOwner";
+    String repoName = "repoName";
+    String repo = "repo";
+    String githubURL = "githubURL";
+
+    List<PullRequest> pullRequests = gitHubWorker.doPreSetup(sysUser, sysPassword, repoOwner, repoName, repo, githubURL);
+    String commentBodyIndicator = "~PR_VALIDATOR";
+    HashMap<Long, Comment> comments = gitHubWorker.captureComments(repoOwner, repoName, pullRequests.get(0), commentBodyIndicator);
+
+    Comment firstComment = comments.get(2L);
+    Comment secondComment = comments.get(3L);
+
+    Assert.assertEquals("Validate correct number of comments returned", 2, comments.size());
+    Assert.assertEquals("Validate first comment id", 2L, firstComment.getId());
+    Assert.assertEquals("Validate second comment id", 3L, secondComment.getId());
+    Assert.assertTrue("Validate first comment body", firstComment.getBody().contains(commentBodyIndicator));
+    Assert.assertTrue("Validate second comment body", secondComment.getBody().contains(commentBodyIndicator));
+  }
+
+  @Test
+  public void testDoZeroCommentsWork() throws Exception {
+    //test setup
+    MockLogWriter logger = new MockLogWriter();
+    GitHubBizLogic gitHubWorker = initialize(logger);
+
+    ArrayList<String> logMessages = logger.getLogEntries();
+    boolean shouldRun = gitHubWorker.doZeroCommentsWork(false);
+    Assert.assertEquals("Validate zero comments work log entry", "Initial Pull Request found, kicking off a build", logMessages.get(0));
+    Assert.assertTrue("Validate should run setting when initially set to false", shouldRun);
+
+    boolean shouldRun2 = gitHubWorker.doZeroCommentsWork(true);
+    Assert.assertTrue("Validate should run setting when initially set to true", shouldRun2);
+  }
+
+  @Test
+  public void testDoNonZeroCommentsWork() throws Exception {
+
   }
 }
