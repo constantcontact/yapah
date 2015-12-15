@@ -209,6 +209,7 @@ public class PullRequestTrigger extends Trigger<AbstractProject<?, ?>> {
         stringParams.add(new StringParameterValue("repositoryName", localConfig.getRepositoryName()));
         stringParams.add(new StringParameterValue("repositoryOwner", localConfig.getRepositoryOwner()));
         stringParams.add(new StringParameterValue("gitHubRepository", localConfig.getGitHubRepository()));
+        stringParams.add(new StringParameterValue("bakedInTesting", "Not Testing"));
         stringParams.add(new StringParameterValue("localGithubUrl", getDescriptor().getGithubUrl()));
         stringParams
             .add(new StringParameterValue("gitHubHeadRepository", pullRequest.getHead().getRepo().getCloneUrl()));
