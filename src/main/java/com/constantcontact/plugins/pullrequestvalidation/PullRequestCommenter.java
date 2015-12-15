@@ -51,10 +51,11 @@ public class PullRequestCommenter extends Publisher implements SimpleBuildStep {
     final String repositoryName = run.getEnvironment(listener).get("repositoryName");
     final String repositoryOwner = run.getEnvironment(listener).get("repositoryOwner");
     final String pullRequestNumber = run.getEnvironment(listener).get("pullRequestNumber");
-    final String localGithubUrl = run.getEnvironment(listener).get("localGithubUrl");   
+    final String localGithubUrl = run.getEnvironment(listener).get("localGithubUrl");
+    final String bakedInTesting = run.getEnvironment(listener).get("bakedInTesting");
 
     List<String> nullValidationForPostBuild = Arrays.asList(new String[] { sha, credentialsId, repositoryName, repositoryOwner,
-        pullRequestNumber, localGithubUrl });
+        pullRequestNumber, localGithubUrl, bakedInTesting });
     
     for(String validationString: nullValidationForPostBuild){
       listener.getLogger().println(validationString);

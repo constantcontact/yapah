@@ -1,7 +1,9 @@
 package PullCommenterTest;
 
+import hudson.EnvVars;
 import hudson.model.FreeStyleBuild;
 import hudson.model.FreeStyleProject;
+import hudson.slaves.EnvironmentVariablesNodeProperty;
 import hudson.tasks.Shell;
 
 import java.util.ArrayList;
@@ -46,7 +48,11 @@ public class PullCommenterTest {
   
   @Test
   public void testAbilityToAddPostBuildActionWithOutTrigger() throws Exception {
-    FreeStyleProject project = jenkinsRule.createFreeStyleProject("BUILD-Test-Repo2");    
+    FreeStyleProject project = jenkinsRule.createFreeStyleProject("BUILD-Test-Repo2");
+    EnvironmentVariablesNodeProperty prop = new EnvironmentVariablesNodeProperty();
+    EnvVars envVars = prop.getEnvVars();
+    envVars.put("bakedInTesting", "");
+    jenkinsRule.jenkins.getGlobalNodeProperties().add(prop);
     project.getBuildersList().add(new Shell("echo hello"));
     PullRequestCommenter publisher = new PullRequestCommenter();
     project.addPublisher(publisher);
