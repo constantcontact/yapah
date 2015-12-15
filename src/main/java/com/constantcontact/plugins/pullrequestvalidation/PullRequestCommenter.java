@@ -57,7 +57,7 @@ public class PullRequestCommenter extends Publisher implements SimpleBuildStep {
         pullRequestNumber, localGithubUrl });
     
     for(String validationString: nullValidationForPostBuild){
-      listener.getLogger().println(validationString + " " + validationString.length());
+      listener.getLogger().println(validationString);
       if(null == validationString || validationString == ""){
         listener.getLogger().println(Messages.commenter_null_validation());
       }
