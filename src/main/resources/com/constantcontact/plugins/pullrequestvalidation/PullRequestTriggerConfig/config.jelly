@@ -1,6 +1,7 @@
 <?jelly escape-by-default='true'?>
-<j:jelly xmlns:j="jelly:core" xmlns:f="/lib/form">
-  <j:invokeStatic var="descriptor"
+<j:jelly xmlns:j="jelly:core" xmlns:st="jelly:stapler" xmlns:d="jelly:define" xmlns:l="/lib/layout"
+         xmlns:t="/lib/hudson" xmlns:f="/lib/form" xmlns:c="/lib/credentials">
+ <j:invokeStatic var="descriptor"
       className="com.constantcontact.plugins.pullrequestvalidation.PullRequestTriggerConfig"
       method="getClassDescriptor"/>
   <f:entry title="${%Github Repository}" field="gitHubRepository">
@@ -12,11 +13,8 @@
   <f:entry title="${%Repository Name}" field="repositoryName">
     <f:textbox value="${it.repositoryName}"/>
   </f:entry>
-  <f:entry title="${%System User}" field="systemUser">
-    <f:textbox value="${it.systemUser}"/>
-  </f:entry>
-   <f:entry title="${%System User Password}" field="systemUserPassword">
-    <f:password value="${it.systemUserPassword}"/>
+<f:entry title="${%Credentials}" field="credentialsId">
+      <c:select />
   </f:entry>
  
 </j:jelly>
