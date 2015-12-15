@@ -1,19 +1,45 @@
-# Pull Request Validator Jenkins Plugin
+# YAPah - Yet Another Pull Request
+# Jenkins Plugin
 ### Summary
-The Pull Request Validator Jenkins Plugin was designed to easily create a way for a project to be built in jenkins after a PR request has been submitted.  The plugin consists of two components, trigger and a post action.  One will not work with out the other.  Setup of this plugin is fairly simple. 
+This Jenkins plugin builds pull requests from Github and comments on the pull request when the job has started and again to let you know the status when it finished.  
 
-Once Installed:
+### Required Jenkins Plugins
 
-1. Goto Manage Jenkins
-2. Goto Configure System
-3. Look for Github Pull Request Poller and enter your jenkins domain, it must be at least 4 characters long and should not contain http:// or https://
-4. Create or modify an existing job
-5. Create a parametized build, enter a string variable "sha" with the default value of "master"
-6. Under Build Triggers, check off Github Pull Request Poller
-7. Enter a cron time under the Cron Schedule (* * * * * for every minute)
-8. Fill in the Github Repository, Owner, Name, System User and System User Password.  (System user needs to have privileges to comment on the repo and the keep in mind the password should not expire)
-9. Do this for as many repositories as needed (Suggested 1 per job, various use cases account for multiple)
-10. Do a build or whatever you need to do to validate your job
-11. Add Post Action Build Step and select Github API Pull Request Validator (This requires no configuration)
+* GitHub API Plugin
+* GitHub Plugin
+* Git Plugin
+* Credentials Plugin
+* Plain Credentials Plugin
 
-What will happen now is when your pull request is submitted this job will find it and execute itself.  It will post to the pull request giving its status, a link and once completed a success / fail message giving the user the option to merge.
+### Installation
+
+1. Build the plugin (mvn package)
+2. Copy YAPah.hpi from your target directory into your plugins directory
+3. Restart Jenkins
+
+### Configuration
+
+1. Go to Manage Jenkins
+2. Configure System
+3. YAPah Github Pull Request Poller
+4. Change github.com to any enterprise github (github.company.com)
+
+### Build Configuration
+
+1. Create a parameterized build
+2. Create a String parameter with the name of sha and the default value of master
+3. Create a String parameter with the name of gitHubHeadRepository and default it to your repository
+4. Select Git as your Source Code Management
+5. Enter ${gitHubHeadRepository} for the Repository URL
+6. Enter ${sha} for Branches to Build
+7. Select YAPah Github Pull Request Poller under Build Triggers
+8. Enter a Cron Schedule to your preference (e.g. * * * * * for once a minute)
+9. Enter your Github Repository
+10. Enter the owners name of the repository
+11. Enter the Repository Name
+12. Store a user to whom has access to comment on pull requests for the repository.  Please try to use a System user as passwords tend to expire.
+13. Click Test Connection to validate that everything is setup correctly.
+14. Add a Post build Action and select YAPah Github API Pull Request Validator
+
+![alt tag](https://github.roving.com/rdavis/pull-request-validation-plugin/flow-diagram.png)
+
