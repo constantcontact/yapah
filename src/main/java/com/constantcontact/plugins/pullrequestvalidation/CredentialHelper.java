@@ -16,9 +16,11 @@ public class CredentialHelper {
   public static StandardCredentials lookupCredentials(Item context, String credentialId, String uri,
       PrintStream printStream) {
     String contextName = "(Jenkins.instance)";
+    
     if (context != null) {
       contextName = context.getFullName();
     }
+    
     printStream.println(Messages.credshelper_log_1() + credentialId + Messages.credshelper_log_2() + contextName
         + Messages.credshelper_log_3() + uri);
 
