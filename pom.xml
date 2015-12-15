@@ -12,12 +12,12 @@
 		<relativePath />
 	</parent>
 	<groupId>com.constantcontact.plugins</groupId>
-	<artifactId>pull-request-validation</artifactId>
+	<artifactId>YAPah</artifactId>
 	<version>1.0-SNAPSHOT</version>
 	<packaging>hpi</packaging>
 
-	<name>Github API Pull Request Validation</name>
-	<description>TODO: Description</description>
+	<name>YAPah</name>
+	<description>Github Pull Request Build Validation</description>
 	<url>https://wiki.jenkins-ci.org/display/JENKINS/TODO+Plugin</url>
 	<licenses>
 		<license>
@@ -59,11 +59,7 @@
 			<url>http://repo.jenkins-ci.org/public/</url>
 		</pluginRepository>
 	</pluginRepositories>
-	<!-- If you want to depend on other plugins: <dependencies> <dependency> 
-		<groupId>org.jenkins-ci.plugins</groupId> <artifactId>credentials</artifactId> 
-		<version>1.9.4</version> </dependency> </dependencies> -->
 	<dependencies>
-
 		<dependency>
 			<groupId>org.eclipse.mylyn.github</groupId>
 			<artifactId>org.eclipse.egit.github.core</artifactId>
@@ -81,15 +77,12 @@
 			<artifactId>credentials</artifactId>
 			<version>1.24</version>
 		</dependency>
-		
-		 <dependency>
-            <groupId>org.jenkins-ci.plugins</groupId>
-            <artifactId>plain-credentials</artifactId>
-            <version>1.1</version>
-        </dependency>
 
-
-
+		<dependency>
+			<groupId>org.jenkins-ci.plugins</groupId>
+			<artifactId>plain-credentials</artifactId>
+			<version>1.1</version>
+		</dependency>
 	</dependencies>
 
 

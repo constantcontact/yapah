@@ -18,7 +18,15 @@ import java.net.URISyntaxException;
 import java.util.ArrayList;
 import java.util.List;
 
+import javax.servlet.ServletException;
+
+import jenkins.model.Jenkins;
+
 import org.apache.commons.lang.StringUtils;
+import org.eclipse.egit.github.core.Repository;
+import org.eclipse.egit.github.core.client.GitHubClient;
+import org.eclipse.egit.github.core.service.PullRequestService;
+import org.eclipse.egit.github.core.service.RepositoryService;
 import org.jenkinsci.plugins.plaincredentials.StringCredentials;
 import org.kohsuke.stapler.AncestorInPath;
 import org.kohsuke.stapler.DataBoundConstructor;
@@ -149,36 +157,49 @@ public final class PullRequestTriggerConfig implements Describable<PullRequestTr
           );
     }
 
-    public FormValidation doTestConfiguration(
+    public FormValidation doTestConnection(@QueryParameter("repositoryOwner") final String repositoryOwner,
         @QueryParameter("repositoryName") final String repositoryName,
-        @QueryParameter("systemUser") final String systemUser,
-        @QueryParameter("systemUserPassword") final String systemUserPassword,
-        @QueryParameter("repositoryOwner") final String repositoryOwner,
-        @QueryParameter("gitHubRepository") final String gitHubRepository)
-        throws IOException, InterruptedException {
+        @QueryParameter("credentialsId") final String credentialsId,
+        @QueryParameter("gitHubRepository") final String gitHubRepository) throws IOException, ServletException {
 
-      if (repositoryName.length() < 1) {
-        return FormValidation.error(Messages.config_form_validation_1());
+      StandardCredentials creds = CredentialHelper.lookupCredentials(credentialsId, gitHubRepository);
+      if (null == creds) {
+        return FormValidation.error(Messages.config_test_validation_nocreds());
+      }
+      StandardUsernamePasswordCredentials upCredentials = (StandardUsernamePasswordCredentials) creds;
+      PullRequestTrigger.DescriptorImpl prDescriptor = (PullRequestTrigger.DescriptorImpl) Jenkins.getInstance()
+          .getDescriptor(PullRequestTrigger.class);
+      GitHubClient githubClient = new GitHubClient(prDescriptor.getGithubUrl());
+      githubClient.setCredentials(upCredentials.getUsername(), upCredentials.getPassword().getPlainText());
+
+      RepositoryService repositoryService = new RepositoryService(githubClient);
+      try {
+        repositoryService.getRepositories();
+      } catch (IOException ioException) {
+        return FormValidation
+            .error(Messages.config_test_validation_nogh_1() + ioException.getLocalizedMessage());
+      }
+      Repository repository;
+      try {
+        repository = repositoryService.getRepository(repositoryOwner, repositoryName);
+      } catch (IOException ioException) {
+        return FormValidation.error(Messages.config_test_validation_norepo_1()
+            + repositoryOwner + Messages.config_test_validation_norepo_2() + repositoryName + " "
+            + ioException.getLocalizedMessage());
       }
 
-      if (systemUser.length() < 1) {
-        return FormValidation.error(Messages.config_form_validation_2());
+      PullRequestService pullRequestService = new PullRequestService(githubClient);
+      try {
+        pullRequestService.getPullRequests(repository, "open");
+      } catch (IOException ioException) {
+        return FormValidation
+            .error(Messages.config_test_validation_nopr()
+                + ioException.getLocalizedMessage());
       }
 
-      if (systemUserPassword.length() < 1) {
-        return FormValidation.error(Messages.config_form_validation_3());
-      }
-
-      if (repositoryOwner.length() < 1) {
-        return FormValidation.error(Messages.config_form_validation_4());
-      }
-
-      if (gitHubRepository.length() < 1) {
-        return FormValidation.error(Messages.config_form_validation_5());
-      }
-
-      return FormValidation.ok();
+      return FormValidation.ok("Success");
     }
+
   }
 
   public String getRepositoryName() {
