@@ -12,7 +12,6 @@ import org.apache.commons.io.FileUtils;
 import org.eclipse.egit.github.core.Comment;
 import org.eclipse.egit.github.core.PullRequest;
 import org.junit.Assert;
-import org.junit.Rule;
 import org.junit.Test;
 import org.jvnet.hudson.test.JenkinsRule;
 
@@ -24,7 +23,7 @@ import java.util.Map.Entry;
 
 public class PullRequestTriggerTest {
 
-  @Rule
+  //@Rule
   public JenkinsRule jenkinsRule = new JenkinsRule();
 
   @Test
@@ -194,7 +193,7 @@ public class PullRequestTriggerTest {
     Assert.assertTrue("Validate should run setting when initially set to true", shouldRun2);
   }
 
-  //@Test
+  @Test
   public void testDoNonZeroCommentsWork() throws Exception {
     //test setup
     MockLogWriter logger = new MockLogWriter();
@@ -217,6 +216,20 @@ public class PullRequestTriggerTest {
     List<PullRequest> pullRequests = gitHubWorker.doPreSetup(sysUser, sysPassword, repoOwner, repoName, repo, githubURL);
     String commentBodyIndicator = "~PR_VALIDATOR";
     HashMap<Long, Comment> commentHash = gitHubWorker.captureComments(repoOwner, repoName, pullRequests.get(0), commentBodyIndicator);
-    boolean shouldRun = gitHubWorker.doNonZeroCommentsWork(true, commentHash, "sha", commentBodyIndicator);
+
+    //method to test
+    boolean shouldRun = gitHubWorker.doNonZeroCommentsWork(false, commentHash, "sha", commentBodyIndicator);
+
+    Assert.assertFalse("Validate shouldrun setting", shouldRun);
+    ArrayList<String> logMessages = logger.getLogEntries();
+    Assert.assertEquals("Validate zero comments work log entry", "No new commits since the last build, not triggering build", logMessages
+            .get(logMessages.size() - 1));
+    boolean shouldRun2 = gitHubWorker.doNonZeroCommentsWork(true, commentHash, "sha", commentBodyIndicator);
+
+    Assert.assertTrue("Validate shouldrun setting", shouldRun2);
+    ArrayList<String> logMessages2 = logger.getLogEntries();
+    Assert.assertEquals("Validate zero comments work log entry", "No new commits since the last build, not triggering build", logMessages2
+            .get(logMessages2.size() - 1));
+
   }
 }
