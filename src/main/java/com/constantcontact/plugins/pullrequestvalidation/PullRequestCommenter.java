@@ -63,13 +63,18 @@ public class PullRequestCommenter extends Publisher implements SimpleBuildStep {
     nullValidationForPostBuild.put("bakedInTesting",bakedInTesting);
 
     String validationString = null;
+    boolean doCommentWork = true;
     for(String validationKey: nullValidationForPostBuild.keySet()){
       validationString = nullValidationForPostBuild.get(validationKey);
       if(null == validationString || validationString == ""){
+        doCommentWork = false;
         listener.getLogger().println(validationKey.toString() + Messages.commenter_null_key_validation());
-        listener.getLogger().println(Messages.commenter_null_validation());
-        return;
       }
+    }
+    
+    if(!doCommentWork){
+      listener.getLogger().println(Messages.commenter_null_validation());
+      return;
     }
 
     StandardCredentials credentials = CredentialHelper.lookupCredentials(null, credentialsId, localGithubUrl, listener.getLogger());
