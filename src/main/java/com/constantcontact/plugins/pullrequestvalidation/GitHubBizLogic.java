@@ -107,6 +107,7 @@ public class GitHubBizLogic {
             for (RepositoryCommit commit : commits) {
                 if (commit.getCommit().getAuthor().getDate().after(mostRecentComment.getCreatedAt())) {
                     shouldRunSetting = true;
+                    break;
                 }
             }
         }
