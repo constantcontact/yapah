@@ -1,11 +1,15 @@
 # YAPah - Yet Another Pull Request
 ## Jenkins Plugin
 ### Summary
-This Jenkins plugin builds pull requests from Github and comments on the pull request when the job has started and again to let you know the status when it finished. Since this plugin starts from a trigger, it allows you to fill your jenkins jobs with various build steps to analyse, test, or anything else that another plugin can provide as a build step.  Allowing you to fail your build along the way if it did not meet all of the criteria of the job. 
+This Jenkins plugin builds the code in pull requests from Github and comments on the pull request when the job has started and again to let
+you know the status when it finished. Since this plugin starts from a trigger, it allows you to fill your jenkins jobs with various build
+ steps to analyze, test, or do anything else that another plugin can provide as a build step.  The plugin allows you to fail your build
+ along the way if it did not meet all of the criteria configured in the jenkins job configuration.
 
 #### Example Use Case
 ##### Code analyse with Sonar
-Job is triggered from a pull request, the sonar runner plugin analyses the code and gets a code coverage percent.  If this percentage is below a company standard, the shell build script fails out.  The publisher post action will comment on the pull request saying the build has failed and to be careful to merge with a link to the build to explain why.
+Job is triggered from a pull request, the sonar runner plugin analyzes the code and gets a code coverage percent.  If this percentage is
+below a company standard, the shell build script fails out.  The publisher post action will comment on the pull request saying the build has failed and to be careful to merge with a link to the build to explain why.
 
 
 ### Required Jenkins Plugins
@@ -19,7 +23,8 @@ Job is triggered from a pull request, the sonar runner plugin analyses the code 
 ### Installation
 
 1. Build the plugin (mvn package)
-2. Copy YAPah.hpi from your target directory into your plugins directory
+2. Copy YAPah.hpi from your target directory into your plugins directory. (Note: One way to find your plugins directory on mac or linux
+is to run the ps shell command as in _ps -ef | grep Jenkins_)
 3. Restart Jenkins
 
 ### Configuration
@@ -55,4 +60,17 @@ Job is triggered from a pull request, the sonar runner plugin analyses the code 
 ### Example Comments
 ![alt tag](example-comments.png)
 
+### Dev Environment Setup
+The following details should be helpful for those looking to contribute to development of this plugin.  Start by creating a fork of the
+repository to be able to later submit pull requests and
+you can use the guidance below to set up the project in your IDE.
 
+#### Intellij
+Create a maven project in intellij. Since some of the sources are generated at build time, you'll need to use the _Generate Sources and
+Update Folders_ sub-option found under the _Maven_ option
+when
+ you right click on your project module.
+
+#### Eclipse
+Since some of the sources are generated at build time, these are best picked up by creating eclipse configuration files
+from maven by running the command: _mvn eclipse:eclipse_ .  You can then create your eclipse project from these eclipse configuration files.
