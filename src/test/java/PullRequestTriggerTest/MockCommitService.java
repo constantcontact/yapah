@@ -13,8 +13,13 @@ import java.util.*;
  *
  */
 public class MockCommitService extends CommitService {
-    public MockCommitService(GitHubClient gitHubClient) {
+    Date commitDate = new GregorianCalendar(2014, Calendar.FEBRUARY, 11).getTime();
 
+    public MockCommitService(GitHubClient gitHubClient) {
+    }
+
+    public void setCommitDate(Date commitDate) {
+        this.commitDate = commitDate;
     }
 
     @Override
@@ -23,8 +28,7 @@ public class MockCommitService extends CommitService {
         RepositoryCommit rc1 = new RepositoryCommit();
         Commit cm = new Commit();
         CommitUser author = new CommitUser();
-        Date date = new GregorianCalendar(2014, Calendar.FEBRUARY, 11).getTime();
-        author.setDate(date);
+        author.setDate(commitDate);
         cm.setAuthor(author);
         rc1.setCommit(cm);
 

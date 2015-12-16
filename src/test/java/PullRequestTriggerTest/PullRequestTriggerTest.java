@@ -12,18 +12,16 @@ import org.apache.commons.io.FileUtils;
 import org.eclipse.egit.github.core.Comment;
 import org.eclipse.egit.github.core.PullRequest;
 import org.junit.Assert;
+import org.junit.Rule;
 import org.junit.Test;
 import org.jvnet.hudson.test.JenkinsRule;
 
-import java.util.ArrayList;
-import java.util.HashMap;
-import java.util.List;
-import java.util.Map;
+import java.util.*;
 import java.util.Map.Entry;
 
 public class PullRequestTriggerTest {
 
-  //@Rule
+  @Rule
   public JenkinsRule jenkinsRule = new JenkinsRule();
 
   @Test
@@ -32,14 +30,14 @@ public class PullRequestTriggerTest {
     PullRequestTriggerConfig config = new PullRequestTriggerConfig("systemUser1", "repositoryName1", "repositoryOwner1", "gitHubRepository1", "sha1", "pullRequestUrl1");
     List<PullRequestTriggerConfig> configs = new ArrayList<PullRequestTriggerConfig>();
     configs.add(config);
-    
+
     PullRequestTrigger trigger = new PullRequestTrigger("* * * * *", configs);
     project.addTrigger(trigger);
     project.getBuildersList().add(new Shell("echo hello"));
-    project.save();  
-    
+    project.save();
+
     Map<TriggerDescriptor, Trigger<?>> testTriggers = project.getTriggers();
-    for(Entry<?, ?> entry : testTriggers.entrySet()){
+    for (Entry<?, ?> entry : testTriggers.entrySet()) {
       PullRequestTrigger localTrigger = (PullRequestTrigger) entry.getValue();
       Assert.assertEquals(true, localTrigger.getCredentialsId().contains("systemUser1"));
       Assert.assertEquals(true, localTrigger.getRepositoryName().contains("repositoryName1"));
@@ -116,6 +114,7 @@ public class PullRequestTriggerTest {
 
     ArrayList<String> logMessages = logger.getLogEntries();
     String repo = "repo";
+    //method to test
     gitHubWorker.logZeroPR(repo);
     Assert.assertEquals("Validate zero pr log entry", "Found no Pull Requests for " + repo, logMessages.get(0));
   }
@@ -128,6 +127,7 @@ public class PullRequestTriggerTest {
 
     ArrayList<String> logMessages = logger.getLogEntries();
     String sha = "sha";
+    //method to test
     gitHubWorker.logSHA(sha);
     Assert.assertEquals("Validate sha log entry", "Got SHA1 : " + sha, logMessages.get(0));
   }
@@ -140,6 +140,7 @@ public class PullRequestTriggerTest {
 
     ArrayList<String> logMessages = logger.getLogEntries();
     String url = "url";
+    //method to test
     gitHubWorker.logPRURL(url);
     Assert.assertEquals("Validate sha log entry", "Pull Request URL : " + url, logMessages.get(0));
   }
@@ -166,6 +167,7 @@ public class PullRequestTriggerTest {
 
     List<PullRequest> pullRequests = gitHubWorker.doPreSetup(sysUser, sysPassword, repoOwner, repoName, repo, githubURL);
     String commentBodyIndicator = "~PR_VALIDATOR";
+    //method to test
     HashMap<Long, Comment> comments = gitHubWorker.captureComments(repoOwner, repoName, pullRequests.get(0), commentBodyIndicator);
 
     Comment firstComment = comments.get(2L);
@@ -185,6 +187,7 @@ public class PullRequestTriggerTest {
     GitHubBizLogic gitHubWorker = initialize(logger);
 
     ArrayList<String> logMessages = logger.getLogEntries();
+    //method to test
     boolean shouldRun = gitHubWorker.doZeroCommentsWork(false);
     Assert.assertEquals("Validate zero comments work log entry", "Initial Pull Request found, kicking off a build", logMessages.get(0));
     Assert.assertTrue("Validate should run setting when initially set to false", shouldRun);
@@ -200,6 +203,7 @@ public class PullRequestTriggerTest {
     MockGitHubClient githubClient = new MockGitHubClient();
     MockRepositoryService repositoryService = new MockRepositoryService(githubClient);
     MockPullRequestService pullRequestService = new MockPullRequestService(githubClient);
+    //Commits used later in this test are defined in MockCommitService
     MockCommitService commitService = new MockCommitService(githubClient);
     //Comments used later in this test are defined in MockIssueService
     MockIssueService issueService = new MockIssueService(githubClient);
@@ -231,5 +235,10 @@ public class PullRequestTriggerTest {
     Assert.assertEquals("Validate zero comments work log entry", "No new commits since the last build, not triggering build", logMessages2
             .get(logMessages2.size() - 1));
 
+
+    commitService.setCommitDate(new GregorianCalendar(2016, Calendar.FEBRUARY, 11).getTime());
+    //method to test
+    boolean shouldRun3 = gitHubWorker.doNonZeroCommentsWork(false, commentHash, "sha", commentBodyIndicator);
+    Assert.assertTrue("Validate shouldrun setting", shouldRun3);
   }
 }
