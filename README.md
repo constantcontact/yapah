@@ -5,11 +5,11 @@ This Jenkins plugin builds pull requests from Github and comments on the pull re
 
 ### Required Jenkins Plugins
 
-* GitHub API Plugin
-* GitHub Plugin
-* Git Plugin
-* Credentials Plugin
-* Plain Credentials Plugin
+* GitHub API Plugin (https://wiki.jenkins-ci.org/display/JENKINS/GitHub+API+Plugin)
+* GitHub Plugin (https://wiki.jenkins-ci.org/display/JENKINS/GitHub+Plugin)
+* Git Plugin (https://wiki.jenkins-ci.org/display/JENKINS/Git+Plugin)
+* Credentials Plugin (https://wiki.jenkins-ci.org/display/JENKINS/Credentials+Plugin)
+* Plain Credentials Plugin (https://wiki.jenkins-ci.org/display/JENKINS/Plain+Credentials+Plugin)
 
 ### Installation
 
