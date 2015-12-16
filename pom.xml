@@ -17,7 +17,10 @@
 	<packaging>hpi</packaging>
 
 	<name>YAPah</name>
-	<description>Github Pull Request Build Validation</description>
+	<description>Yet Another Pull Request - JenkinsPlugin
+	Jenkins trigger that will check for pull requests and kick off that particular job when it never has been built, or has a new commit.  Works from fork to fork, and branch to branch. 
+	Jenkins Publisher that will comment on the pull request in github to let you know when the build has been completed and its status.
+	</description>
 	<url>https://wiki.jenkins-ci.org/display/JENKINS/TODO+Plugin</url>
 	<licenses>
 		<license>
@@ -25,6 +28,7 @@
 			<url>http://opensource.org/licenses/MIT</url>
 		</license>
 	</licenses>
+
 	<!-- If you want this to appear on the wiki page: <developers> <developer> 
 		<id>bhacker</id> <name>Bob Q. Hacker</name> <email>bhacker@nowhere.net</email> 
 		</developer> </developers> -->

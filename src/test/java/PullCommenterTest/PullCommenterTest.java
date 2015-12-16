@@ -64,6 +64,7 @@ public class PullCommenterTest {
     String s = FileUtils.readFileToString(build.getLogFile());
     System.out.println(s);
     Assert.assertEquals(true, s.contains("+ echo hello"));
+    Assert.assertEquals(true, s.contains("bakedInTesting was empty or null"));
     Assert.assertEquals(true, s.contains("Github Pull Request Poller needs to be setup as a trigger before being able to use this post build action."));
     
   }

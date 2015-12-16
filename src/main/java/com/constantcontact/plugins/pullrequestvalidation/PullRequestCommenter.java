@@ -13,8 +13,7 @@ import hudson.tasks.Publisher;
 import hudson.util.FormValidation;
 
 import java.io.IOException;
-import java.util.Arrays;
-import java.util.List;
+import java.util.HashMap;
 
 import jenkins.model.Jenkins;
 import jenkins.tasks.SimpleBuildStep;
@@ -41,7 +40,7 @@ public class PullRequestCommenter extends Publisher implements SimpleBuildStep {
   }
 
   private static final String PR_VALIDATOR = "~PR_VALIDATOR_FINISH!~";
-
+  
   @Override
   public void perform(Run<?, ?> run, FilePath workspace, Launcher launcher,
       TaskListener listener) throws InterruptedException, IOException {
@@ -54,14 +53,28 @@ public class PullRequestCommenter extends Publisher implements SimpleBuildStep {
     final String localGithubUrl = run.getEnvironment(listener).get("localGithubUrl");
     final String bakedInTesting = run.getEnvironment(listener).get("bakedInTesting");
 
-    List<String> nullValidationForPostBuild = Arrays.asList(new String[] { sha, credentialsId, repositoryName, repositoryOwner,
-        pullRequestNumber, localGithubUrl, bakedInTesting });
-    
-    for(String validationString: nullValidationForPostBuild){
-      listener.getLogger().println(validationString);
+    HashMap<String,String> nullValidationForPostBuild = new HashMap<String,String>();
+    nullValidationForPostBuild.put("sha",sha);
+    nullValidationForPostBuild.put("credentialsId",credentialsId);
+    nullValidationForPostBuild.put("repositoryName",repositoryName);
+    nullValidationForPostBuild.put("repositoryOwner",repositoryOwner);
+    nullValidationForPostBuild.put("pullRequestNumber",pullRequestNumber);
+    nullValidationForPostBuild.put("localGithubUrl",localGithubUrl);
+    nullValidationForPostBuild.put("bakedInTesting",bakedInTesting);
+
+    String validationString = null;
+    boolean doCommentWork = true;
+    for(String validationKey: nullValidationForPostBuild.keySet()){
+      validationString = nullValidationForPostBuild.get(validationKey);
       if(null == validationString || validationString == ""){
-        listener.getLogger().println(Messages.commenter_null_validation());
+        doCommentWork = false;
+        listener.getLogger().println(validationKey.toString() + " " + Messages.commenter_null_key_validation());
       }
+    }
+    
+    if(!doCommentWork){
+      listener.getLogger().println(Messages.commenter_null_validation());
+      return;
     }
 
     StandardCredentials credentials = CredentialHelper.lookupCredentials(null, credentialsId, localGithubUrl, listener.getLogger());
