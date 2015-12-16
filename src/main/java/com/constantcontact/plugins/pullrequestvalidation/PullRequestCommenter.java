@@ -68,7 +68,7 @@ public class PullRequestCommenter extends Publisher implements SimpleBuildStep {
       validationString = nullValidationForPostBuild.get(validationKey);
       if(null == validationString || validationString == ""){
         doCommentWork = false;
-        listener.getLogger().println(validationKey.toString() + Messages.commenter_null_key_validation());
+        listener.getLogger().println(validationKey.toString() + " " + Messages.commenter_null_key_validation());
       }
     }
     
