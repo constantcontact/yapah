@@ -1,6 +1,5 @@
 package PullRequestTriggerTest;
 
-import com.sun.istack.internal.NotNull;
 import org.eclipse.egit.github.core.Comment;
 import org.eclipse.egit.github.core.IRepositoryIdProvider;
 import org.eclipse.egit.github.core.client.GitHubClient;
@@ -37,7 +36,7 @@ public class MockIssueService extends IssueService {
     }
 
     @Override
-    public Comment createComment(IRepositoryIdProvider repository, @NotNull String issueNumber, String comment) {
+    public Comment createComment(IRepositoryIdProvider repository, String issueNumber, String comment) {
         setRepository(repository);
         setIssueNumber(issueNumber);
         setComment(comment);

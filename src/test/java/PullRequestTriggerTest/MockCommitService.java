@@ -1,6 +1,5 @@
 package PullRequestTriggerTest;
 
-import com.sun.istack.internal.NotNull;
 import org.eclipse.egit.github.core.*;
 import org.eclipse.egit.github.core.client.GitHubClient;
 import org.eclipse.egit.github.core.service.CommitService;
@@ -40,7 +39,7 @@ public class MockCommitService extends CommitService {
 
 
     @Override
-    public CommitStatus createStatus(IRepositoryIdProvider repository, @NotNull String sha, @NotNull CommitStatus commitStatus)
+    public CommitStatus createStatus(IRepositoryIdProvider repository, String sha, CommitStatus commitStatus)
             throws IOException {
         setRepository(repository);
         setSha(sha);
