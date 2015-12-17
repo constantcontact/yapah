@@ -1,9 +1,6 @@
 package com.constantcontact.plugins.pullrequestvalidation;
 
-import org.eclipse.egit.github.core.Comment;
-import org.eclipse.egit.github.core.PullRequest;
-import org.eclipse.egit.github.core.Repository;
-import org.eclipse.egit.github.core.RepositoryCommit;
+import org.eclipse.egit.github.core.*;
 import org.eclipse.egit.github.core.client.GitHubClient;
 import org.eclipse.egit.github.core.service.CommitService;
 import org.eclipse.egit.github.core.service.IssueService;
@@ -27,6 +24,7 @@ public class GitHubBizLogic {
     private CommitService commitService;
     private IssueService issueService;
     private Repository repository;
+    private CommitStatus commitStatus;
 
     public GitHubBizLogic(LogWriter logWriter, GitHubClient githubClient, RepositoryService repositoryService,
                           PullRequestService pullRequestService, CommitService commitService, IssueService issueService) {
@@ -34,8 +32,44 @@ public class GitHubBizLogic {
         this.repositoryService = repositoryService;
         this.pullRequestService = pullRequestService;
         this.logWriter = logWriter;
-        this.setCommitService(commitService);
-        this.setIssueService(issueService);
+        setCommitService(commitService);
+        setIssueService(issueService);
+    }
+
+    public GitHubBizLogic(GitHubClient githubClient, RepositoryService repositoryService, CommitStatus commitStatus,
+                          CommitService commitService, IssueService issueService) {
+        this.githubClient = githubClient;
+        this.repositoryService = repositoryService;
+        this.commitStatus = commitStatus;
+        setCommitService(commitService);
+        setIssueService(issueService);
+    }
+
+    public void createCommitStatusAndComment(String systemUser, String systemPassword, String repoOwner, String repoName, String state,
+                                             String desc, String sha, String pullRequestNumber, String rootURL, String prValidator,
+                                             String absoluteURL, String displayName) throws IOException {
+        githubClient.setCredentials(systemUser, systemPassword);
+        setRepository(repositoryService.getRepository(repoOwner, repoName));
+        commitStatus.setState(state);
+        commitStatus.setDescription(desc);
+        commitService.createStatus(getRepository(), sha, commitStatus);
+        issueService.createComment(getRepository(), pullRequestNumber, getPoolingComment(rootURL, prValidator, absoluteURL, displayName));
+    }
+
+    private String getPoolingComment(String rootURL, String prValidator, String absoluteURL, String displayName) {
+        StringBuilder sb = new StringBuilder();
+        sb.append(Messages.commenter_pooling_comment_1());
+        sb.append(rootURL);
+        sb.append(Messages.commenter_pooling_comment_2());
+        sb.append(prValidator);
+        sb.append(Messages.commenter_pooling_comment_3());
+        sb.append(Messages.commenter_pooling_comment_4());
+        sb.append(absoluteURL);
+        sb.append(Messages.commenter_pooling_comment_5());
+        sb.append(Messages.commenter_pooling_comment_6());
+        sb.append(displayName);
+        sb.append(Messages.commenter_pooling_comment_7());
+        return sb.toString();
     }
 
     private void logGitHubRepo(String repo) {

@@ -1,26 +1,22 @@
 package com.constantcontact.plugins.pullrequestvalidation;
 
+import com.cloudbees.plugins.credentials.common.StandardCredentials;
+import com.cloudbees.plugins.credentials.common.StandardUsernamePasswordCredentials;
 import hudson.Extension;
 import hudson.FilePath;
 import hudson.Launcher;
-import hudson.model.Result;
-import hudson.model.TaskListener;
 import hudson.model.AbstractProject;
+import hudson.model.Result;
 import hudson.model.Run;
+import hudson.model.TaskListener;
 import hudson.tasks.BuildStepDescriptor;
 import hudson.tasks.BuildStepMonitor;
 import hudson.tasks.Publisher;
 import hudson.util.FormValidation;
-
-import java.io.IOException;
-import java.util.HashMap;
-
 import jenkins.model.Jenkins;
 import jenkins.tasks.SimpleBuildStep;
 import net.sf.json.JSONObject;
-
 import org.eclipse.egit.github.core.CommitStatus;
-import org.eclipse.egit.github.core.Repository;
 import org.eclipse.egit.github.core.client.GitHubClient;
 import org.eclipse.egit.github.core.service.CommitService;
 import org.eclipse.egit.github.core.service.IssueService;
@@ -28,18 +24,18 @@ import org.eclipse.egit.github.core.service.RepositoryService;
 import org.kohsuke.stapler.DataBoundConstructor;
 import org.kohsuke.stapler.StaplerRequest;
 
-import com.cloudbees.plugins.credentials.common.StandardCredentials;
-import com.cloudbees.plugins.credentials.common.StandardUsernamePasswordCredentials;
+import java.io.IOException;
+import java.util.HashMap;
 
 public class PullRequestCommenter extends Publisher implements SimpleBuildStep {
+
+  private static final String PR_VALIDATOR = "~PR_VALIDATOR_FINISH!~";
 
   @SuppressWarnings("deprecation")
   @DataBoundConstructor
   public PullRequestCommenter() {
     // TODO Auto-generated constructor stub
   }
-
-  private static final String PR_VALIDATOR = "~PR_VALIDATOR_FINISH!~";
   
   @Override
   public void perform(Run<?, ?> run, FilePath workspace, Launcher launcher,
@@ -79,63 +75,49 @@ public class PullRequestCommenter extends Publisher implements SimpleBuildStep {
 
     StandardCredentials credentials = CredentialHelper.lookupCredentials(null, credentialsId, localGithubUrl, listener.getLogger());
     StandardUsernamePasswordCredentials upCredentials = (StandardUsernamePasswordCredentials) credentials;
-    
-    GitHubClient githubClient = new GitHubClient(localGithubUrl);
-    githubClient.setCredentials(upCredentials.getUsername(), upCredentials.getPassword().getPlainText());
 
-    RepositoryService repositoryService = new RepositoryService(githubClient);
-    Repository repository = repositoryService.getRepository(repositoryOwner, repositoryName);
-
-    CommitService commitService = new CommitService(githubClient);
-    IssueService issueService = new IssueService(githubClient);
-    StringBuilder sb = new StringBuilder();
-
-    CommitStatus commitStatus = new CommitStatus();
-    commitStatus.setState(CommitStatus.STATE_SUCCESS);
+    String state = CommitStatus.STATE_SUCCESS;
+    String desc = "";
 
     if (run.getResult() == Result.SUCCESS) {
-      commitStatus.setState(CommitStatus.STATE_SUCCESS);
-      sb.append(Messages.commenter_status_pass());
+      state = CommitStatus.STATE_SUCCESS;
+      desc = Messages.commenter_status_pass();
     } else if (run.getResult() == Result.ABORTED) {
-      commitStatus.setState(CommitStatus.STATE_ERROR);
-      sb.append(Messages.commenter_status_aborted());
+      state = CommitStatus.STATE_ERROR;
+      desc = Messages.commenter_status_aborted();
     } else if (run.getResult() == Result.FAILURE) {
-      commitStatus.setState(CommitStatus.STATE_FAILURE);
-      sb.append(Messages.commenter_status_failure());
+      state = CommitStatus.STATE_FAILURE;
+      desc = Messages.commenter_status_failure();
     } else if (run.getResult() == Result.NOT_BUILT) {
-      commitStatus.setState(CommitStatus.STATE_ERROR);
-      sb.append(Messages.commenter_status_notbuilt());
+      state = CommitStatus.STATE_ERROR;
+      desc = Messages.commenter_status_notbuilt();
     } else if (run.getResult() == Result.UNSTABLE) {
-      commitStatus.setState(CommitStatus.STATE_ERROR);
-      sb.append(Messages.commenter_status_unstable());
+      state = CommitStatus.STATE_ERROR;
+      desc = Messages.commenter_status_unstable();
     }
 
-    commitStatus.setDescription(sb.toString());
-    commitService.createStatus(repository, sha, commitStatus);
+    GitHubClient githubClient = new GitHubClient(localGithubUrl);
+    RepositoryService repositoryService = new RepositoryService(githubClient);
+    CommitStatus commitStatus = new CommitStatus();
+    CommitService commitService = new CommitService(githubClient);
+    IssueService issueService = new IssueService(githubClient);
+    GitHubBizLogic gitHubWorker = new GitHubBizLogic(githubClient, repositoryService, commitStatus, commitService, issueService);
 
-    issueService.createComment(repository, pullRequestNumber,
-        getPoolingComment(run));
-  }
 
-  private String getPoolingComment(Run<?, ?> run) {
-    StringBuilder sb = new StringBuilder();
-    sb.append(Messages.commenter_pooling_comment_1());
-    sb.append(Jenkins.getInstance().getRootUrl());
-    sb.append(Messages.commenter_pooling_comment_2());
-    sb.append(PR_VALIDATOR);
-    sb.append(Messages.commenter_pooling_comment_3());
-    sb.append(Messages.commenter_pooling_comment_4());
-    sb.append(run.getAbsoluteUrl());
-    sb.append(Messages.commenter_pooling_comment_5());
-    sb.append(Messages.commenter_pooling_comment_6());
-    sb.append(run.getFullDisplayName());
-    sb.append(Messages.commenter_pooling_comment_7());
-    return sb.toString();
+    gitHubWorker.createCommitStatusAndComment(upCredentials.getUsername(), upCredentials.getPassword()
+                                                                                        .getPlainText(), repositoryOwner, repositoryName, state, desc, sha, pullRequestNumber, Jenkins
+                                                      .getInstance().getRootUrl(), PR_VALIDATOR, run.getAbsoluteUrl(), run
+                                                      .getFullDisplayName());
   }
 
   @Override
   public DescriptorImpl getDescriptor() {
     return (DescriptorImpl) super.getDescriptor();
+  }
+
+  @Override
+  public BuildStepMonitor getRequiredMonitorService() {
+    return BuildStepMonitor.BUILD;
   }
 
   @Extension
@@ -165,11 +147,6 @@ public class PullRequestCommenter extends Publisher implements SimpleBuildStep {
       save();
       return super.configure(req, formData);
     }
-  }
-
-  @Override
-  public BuildStepMonitor getRequiredMonitorService() {
-    return BuildStepMonitor.BUILD;
   }
 
 }

@@ -1,12 +1,11 @@
 package PullRequestTriggerTest;
 
-import org.eclipse.egit.github.core.Commit;
-import org.eclipse.egit.github.core.CommitUser;
-import org.eclipse.egit.github.core.IRepositoryIdProvider;
-import org.eclipse.egit.github.core.RepositoryCommit;
+import com.sun.istack.internal.NotNull;
+import org.eclipse.egit.github.core.*;
 import org.eclipse.egit.github.core.client.GitHubClient;
 import org.eclipse.egit.github.core.service.CommitService;
 
+import java.io.IOException;
 import java.util.*;
 
 /**
@@ -14,6 +13,9 @@ import java.util.*;
  */
 public class MockCommitService extends CommitService {
     Date commitDate = new GregorianCalendar(2014, Calendar.FEBRUARY, 11).getTime();
+    private IRepositoryIdProvider repository;
+    private String sha;
+    private CommitStatus commitStatus;
 
     public MockCommitService(GitHubClient gitHubClient) {
     }
@@ -37,4 +39,37 @@ public class MockCommitService extends CommitService {
     }
 
 
+    @Override
+    public CommitStatus createStatus(IRepositoryIdProvider repository, @NotNull String sha, @NotNull CommitStatus commitStatus)
+            throws IOException {
+        setRepository(repository);
+        setSha(sha);
+        setCommitStatus(commitStatus);
+        return commitStatus;
+    }
+
+
+    public String getSha() {
+        return sha;
+    }
+
+    public void setSha(String sha) {
+        this.sha = sha;
+    }
+
+    public CommitStatus getCommitStatus() {
+        return commitStatus;
+    }
+
+    public void setCommitStatus(CommitStatus commitStatus) {
+        this.commitStatus = commitStatus;
+    }
+
+    public IRepositoryIdProvider getRepository() {
+        return repository;
+    }
+
+    public void setRepository(IRepositoryIdProvider repository) {
+        this.repository = repository;
+    }
 }
