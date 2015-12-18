@@ -1,5 +1,4 @@
-# YAPah - Yet Another Pull Request
-## Jenkins Plugin
+## YAPah - Yet Another Pull Request Jenkins Plugin
 ### Summary
 This Jenkins plugin builds the code in pull requests from Github and comments on the pull request when the job has started and again to let you know the status when it finished. Since this plugin starts from a trigger, it allows you to fill your jenkins jobs with various build steps to analyze, test, or do anything else that another plugin can provide as a build step.  The plugin allows you to fail your build along the way if it did not meet all of the criteria configured in the jenkins job configuration.
 
