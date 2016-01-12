@@ -15,7 +15,15 @@ Job is triggered from a pull request, the Sonar runner plugin analyzes the code 
 * Credentials Plugin (https://wiki.jenkins-ci.org/display/JENKINS/Credentials+Plugin)
 * Plain Credentials Plugin (https://wiki.jenkins-ci.org/display/JENKINS/Plain+Credentials+Plugin)
 
-### Installation
+### Jenkins Installation (Suggested)
+1. Build the plugin (mvn package)
+2. Log into Jenkins
+3. Click Manage Jenkins
+4. Click Manage Plugins
+5. Click Advanced Tab
+6. Under upload plugin, select the HPI file from the target directory and select upload
+
+### Manual Installation
 
 1. Build the plugin (mvn package)
 2. Copy YAPah.hpi from your target directory into your plugins directory. (Note: One way to find your plugins directory on mac or linux
